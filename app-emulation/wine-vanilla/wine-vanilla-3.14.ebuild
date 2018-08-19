@@ -141,6 +141,7 @@ PATCHES=(
 	"${PATCHDIR}/patches/${MY_PN}-1.9.5-multilib-portage.patch" #395615
 	"${PATCHDIR}/patches/${MY_PN}-1.6-memset-O3.patch" #480508
 	"${PATCHDIR}/patches/${MY_PN}-2.0-multislot-apploader.patch" #310611
+	"${FILESDIR}/fix-winegcc-32-bit-build.patch" # fix 32 bit build with winegcc for gentoo 17.1 profile
 )
 PATCHES_BIN=()
 
