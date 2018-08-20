@@ -14,12 +14,12 @@ if [[ ${PV} == "9999" ]] ; then
         SRC_URI=""
 else
         SRC_URI="https://github.com/doitsujin/dxvk/archive/v${PV}.tar.gz -> ${P}.tar.gz"
-        KEYWORDS="-* ~amd64 ~x86 ~x86-fbsd"
+        KEYWORDS="-* ~amd64 ~x86"
 fi
 
 LICENSE="ZLIB"
 SLOT="${PV}"
-IUSE="+abi_x86_32 +abi_x86_64 tests utils"
+IUSE="+abi_x86_32 +abi_x86_64 tests +utils"
 
 REQUIRED_USE="|| ( abi_x86_32 abi_x86_64 )"
 
@@ -46,6 +46,16 @@ PATCHES=(
 	"${FILESDIR}/${P}-winelib-fix.patch"
 )
 
+src_prepare() {
+	if use utils; then
+	        cp "${FILESDIR}/setup.sh" "${T}/dxvk-setup-${PV}"
+		cp "${FILESDIR}/setup_dxvk_winelib.verb" "${T}"
+		sed -e "s/@verb_location@/${EPREFIX}\/usr\/share\/dxvk-${PV}/" -i ${T}/dxvk-setup-${PV} || die
+	fi
+
+	default
+}
+
 multilib_src_configure() {
 	local emesonargs=(
 		--buildtype "release"
@@ -67,30 +77,23 @@ multilib_src_configure() {
 	fi
 	meson_src_configure
 
-	# Edit setup_dxvk.sh.in to work for specific variant
-	sed -e "/\/\.\.\/lib/s/.*//" -i ${BUILD_DIR}/utils/setup_dxvk.sh || die
-	sed -e "/dlls_dir=/s/.*/dlls_dir=${EPREFIX}\/usr\/$(get_libdir)\/dxvk-${PV}/" -i ${BUILD_DIR}/utils/setup_dxvk.sh || die
+        if use utils; then
+		sed -e "s/@dll_dir_${ABI}@/${EPREFIX}\/usr\/$(get_libdir)\/dxvk-${PV}/" -i ${T}/setup_dxvk_winelib.verb || die
+        fi
 }
 
 multilib_src_install() {
+	meson_src_install
+}
+
+multilib_src_install_all() {
     if use utils; then
 	# install winetricks verb
-	insinto ${EPREFIX}/usr/$(get_libdir)/dxvk-${PV}/bin
-	doins ${S}/utils/setup_dxvk.verb
-
-	exeinto ${EPREFIX}/usr/$(get_libdir)/dxvk-${PV}/bin
-	doexe "${FILESDIR}/setup.sh"
-    fi
-
-	# install DXVK setup healper script
-	dosym ${EPREFIX}/usr/$(get_libdir)/dxvk-${PV}/bin/setup_dxvk.sh ${EPREFIX}/usr/bin/dxvk-setup-${ABI}-${PV}
+	insinto ${EPREFIX}/usr/share/dxvk-${PV}
+	doins ${T}/setup_dxvk_winelib.verb
 
 	# create combined setup helper
-	[ ! -f ${S}/dxvk-setup-${PV} ] && echo '#!/bin/sh' > ${S}/dxvk-setup-${PV}
-	echo dxvk-setup-${ABI}-${PV} '$@' >> ${S}/dxvk-setup-${PV}
-
 	exeinto ${EPREFIX}/usr/bin
-	doexe ${S}/dxvk-setup-${PV}
-
-	meson_src_install
+	doexe ${T}/dxvk-setup-${PV}
+    fi
 }
