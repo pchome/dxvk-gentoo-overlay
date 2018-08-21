@@ -38,9 +38,11 @@ emerge -1 games-util/dxvk:9999 -q
 
 ### DXVK requirements to pay attention
 * `>=sys-devel/gcc-7.3.0`<br>
-  C++ code require full c++17 standart implementation, `7.3.0` is current minimal suitable version in portage tree
+  C++ code require full C++17 standard implementation (c++1z/c++17), `7.3.0` is current minimal suitable version in portage tree.
+  
 * `>=app-emulation/wine-*-3.14`<br>
   first version with winegcc/winevulkan support for 32 bit binaries
+  
 * latest drivers<br>
   see https://github.com/doitsujin/dxvk/wiki/Driver-support <br>
   and https://developer.nvidia.com/vulkan-driver
@@ -96,7 +98,26 @@ export WINEPREFIX="$(pwd)/dxvk-test"
 
 wine /usr/lib64/dxvk-0.70/bin/dxgi-factory.exe.so
 ```
-NOTE: will also produse `dxgi-factory_dxgi.log` in current directory. Usually there are several of them depending which library used.
+NOTE: will also produce `dxgi-factory_dxgi.log` in current directory. Usually there are several of them depending which library used.
+
+### Known issues
+* Even when `.dll.so` libs renamed to `.dll` WINE recognizes them as both "builtin" and "native", so DLL Overrides don't work as expected.<br>
+  You may need to remove them completely from your WINE prefix to use "builtin" versions.<br>
+  "builtin" here mean WINE's and "native" -- Windows DLL.
+  
+* `dxvk-setup-*` helper script now have two "dll" setup methods: **copy** and **symlink** .
+  - copy (`cp --remove-destination`) - enabled for versioned builds;<br>
+    in near feature you will be able to setup different dxvk versions into different WINE prefixes;<br>
+    "dlls" will be available after some versions was uninstalled.<br>
+
+  - symlink (`ln -sf`) - enabled for git builds;<br>
+    you can rebuild `games-util/dxvk:9999` e.g. several times a day;<br>
+    you should not need to run `dxvk-setup-9999` every time for same WINE prefix.
+
+  This approach can be confusing, so better use `export DXVK_HUD=version` wherever possible.
+  
+* *winelib build* method is rather new for DXVK, especially 32 bit builds.<br>
+  If you encountered some problems -- check one of official releases (built w/ MinGW) from https://github.com/doitsujin/dxvk/releases for comparison.
 
 ### Read more
 https://github.com/doitsujin/dxvk#hud - environment variables<br>
