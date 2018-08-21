@@ -7,12 +7,22 @@ Experimental ebuild repository for [DXVK](https://github.com/doitsujin/dxvk) win
 emerge -1 games-util/dxvk:9999 -q
 
 # Example: Install DXVK (+utils use flag)
-WINEPREFIX=/path/to/prefix dxvk-setup-9999
+$ WINEPREFIX=/path/to/prefix dxvk-setup-9999
 
 # Example: Run DXVK test (+test use flag)
 # This one require "native" (read windows) d3dcompiler_47.dll
 # WINEDLLOVERRIDES="d3dcompiler_47,d3d11,dxgi=n"
-WINEPREFIX=/path/to/prefix wine /usr/lib/dxvk-0.70/bin/d3d11-triangle.exe.so
+$ WINEPREFIX=/path/to/prefix wine /usr/lib/dxvk-0.70/bin/d3d11-triangle.exe.so
+
+# Example: check/merge changes for 9999 versions
+emerge app-portage/smart-live-rebuild -q
+smart-live-rebuild -p
+
+# Example: Test unmerged PRs/patches
+# On https://github.com/doitsujin/dxvk/pulls pick one and add ".patch" to url
+mkdir -p /etc/portage/patches/games-util/dxvk-9999
+wget https://github.com/doitsujin/dxvk/pull/581.patch -O /etc/portage/patches/games-util/dxvk-9999/0001-patch-name.patch
+emerge -1 games-util/dxvk:9999 -q
 ```
 
 ### DXVK requirements to pay attention
