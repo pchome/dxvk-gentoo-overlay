@@ -56,6 +56,7 @@ pkg_pretend() {
 
 pkg_setup() {
 	dxvk_check_requirements
+}
 
 src_prepare() {
 	if use utils; then
