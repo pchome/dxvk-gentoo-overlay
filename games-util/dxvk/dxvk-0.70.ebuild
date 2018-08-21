@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
-inherit meson multilib-minimal
+inherit meson-winegcc multilib-minimal
 
 DESCRIPTION="A Vulkan-based translation layer for Direct3D 10/11"
 HOMEPAGE="https://github.com/doitsujin/dxvk"
@@ -59,21 +59,11 @@ src_prepare() {
 
 multilib_src_configure() {
 	local emesonargs=(
-		--buildtype "release"
 		--libdir="$(get_libdir)/dxvk-${PV}"
 		$(meson_use tests enable_tests)
 		--unity on
 	)
-	if [[ ${ABI} == amd64 ]]; then
-		emesonargs+=(
-			--cross-file "$S/build-wine64.txt"
-		)
-	else
-		emesonargs+=(
-			--cross-file "$S/build-wine32.txt"
-		)
-	fi
-	meson_src_configure
+	meson-winegcc_src_configure
 
         if use utils; then
 		sed -e "s/@dll_dir_${ABI}@/${EPREFIX}\/usr\/$(get_libdir)\/dxvk-${PV}/" -i ${T}/setup_dxvk_winelib.verb || die
@@ -81,7 +71,7 @@ multilib_src_configure() {
 }
 
 multilib_src_install() {
-	meson_src_install
+	meson-winegcc_src_install
 }
 
 multilib_src_install_all() {
