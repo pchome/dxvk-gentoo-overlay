@@ -1,7 +1,19 @@
 # dxvk-gentoo-overlay
 Experimental ebuild repository for DXVK winelib builds
 
-# DXVK requirements to pay attention
+## Examples
+```sh
+# Example: Build DXVK from git master
+emerge -1 games-util/dxvk:9999 -q
+
+# Example: Install DXVK (+utils use flag)
+WINEPREFIX=/path/to/prefix dxvk-setup-9999
+
+# Example: Run DXVK test (+test use flag)
+WINEPREFIX=/path/to/prefix wine /usr/lib/dxvk-0.70/bin/d3d11-triangle.exe.so
+```
+
+### DXVK requirements to pay attention
 * `>=sys-devel/gcc-7.3.0`<br>
   C++ code require full c++17 standart implementation, `7.3.0` is current minimal suitable version in portage tree
 * `>=app-emulation/wine-*-3.14`<br>
@@ -10,17 +22,7 @@ Experimental ebuild repository for DXVK winelib builds
   see https://github.com/doitsujin/dxvk/wiki/Driver-support <br>
   and https://developer.nvidia.com/vulkan-driver
 
-# How to build
-
-## Example: Build DXVK from git master
-`# emerge -1 games-util/dxvk:9999 -q`
-
-# How to install
-
-## Example: Install DXVK
-`$ WINEPREFIX=/path/to/prefix dxvk-setup-9999`
-
-# Content
+### Content
 `# USE="test utils abi_x86_32" emerge -1 games-util/dxvk:0.70 -q`<br>
 
 `$ equery f games-util/dxvk:0.70 | less` (cuted)
@@ -59,7 +61,7 @@ Experimental ebuild repository for DXVK winelib builds
 /usr/share/dxvk-0.70/setup_dxvk_winelib.verb
 ```
 
-# Tests
+### Tests
 ```sh
 #!/bin/sh
 
