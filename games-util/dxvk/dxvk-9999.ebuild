@@ -5,7 +5,7 @@ EAPI=6
 
 MULTILIB_COMPAT=( abi_x86_{32,64} )
 
-inherit meson multilib-minimal
+inherit meson-winegcc multilib-minimal
 
 DESCRIPTION="A Vulkan-based translation layer for Direct3D 10/11"
 HOMEPAGE="https://github.com/doitsujin/dxvk"
@@ -37,7 +37,10 @@ RDEPEND="
 DEPEND="${RDEPEND}
 	dev-util/glslang"
 
-PATCHES=( "${FILESDIR}/${PN}-0.70-winelib-fix.patch" )
+PATCHES=(
+	"${FILESDIR}/dxvk-0.70-winelib-fix.patch"
+	"${FILESDIR}/dxvk-0.70-option-for-utils.patch"
+)
 
 dxvk_check_requirements() {
 	if [[ ${MERGE_TYPE} != binary ]]; then
@@ -53,53 +56,44 @@ pkg_pretend() {
 
 pkg_setup() {
 	dxvk_check_requirements
+
+src_prepare() {
+	if use utils; then
+	    cp "${FILESDIR}/setup.sh" "${T}/dxvk-setup-${PV}"
+		cp "${FILESDIR}/setup_dxvk_winelib.verb" "${T}"
+		sed -e "s/@verb_location@/${EPREFIX}\/usr\/share\/dxvk-${PV}/" -i "${T}/dxvk-setup-${PV}" || die
+	fi
+
+	default
 }
 
 multilib_src_configure() {
 	local emesonargs=(
-		--buildtype="release"
-		--prefix="${EPREFIX}/usr/$(get_libdir)"
-		--libdir="dxvk-${PV}"
-		--bindir="dxvk-${PV}/bin"
-		--datadir="dxvk-${PV}"
+		--libdir="$(get_libdir)/dxvk-${PV}"
 		$(meson_use test enable_tests)
 		--unity=on
 	)
-	if [[ ${ABI} == amd64 ]]; then
-		emesonargs+=(
-			--cross-file "${S}/build-wine64.txt"
-		)
-	else
-		emesonargs+=(
-			--cross-file "${S}/build-wine32.txt"
-		)
-	fi
-	meson_src_configure
+	meson-winegcc_src_configure
 
-	# Edit setup_dxvk.sh.in to work for specific variant
-	sed -e "/\/\.\.\/lib/s/.*//" -i "${BUILD_DIR}/utils/setup_dxvk.sh" || die
-	sed -e "/dlls_dir=/s/.*/dlls_dir=${EPREFIX}\/usr\/$(get_libdir)\/dxvk-${PV}/" -i "${BUILD_DIR}/utils/setup_dxvk.sh" || die
+	if use utils; then
+		sed -e "s/@dll_dir_${ABI}@/${EPREFIX}\/usr\/$(get_libdir)\/dxvk-${PV}/" -i "${T}/setup_dxvk_winelib.verb" || die
+    fi
 }
 
 multilib_src_install() {
-	if use utils; then
-		# install winetricks verb
-		insinto "/usr/$(get_libdir)/dxvk-${PV}/bin"
-		doins "${S}/utils/setup_dxvk.verb"
+	meson-winegcc_src_install
+}
 
-		exeinto "/usr/$(get_libdir)/dxvk-${PV}/bin"
-		doexe "${FILESDIR}/setup.sh"
-	fi
+multilib_src_install_all() {
+    if use utils; then
+	    # install winetricks verb
+	    insinto "/usr/share/dxvk-${PV}"
+	    doins "${T}/setup_dxvk_winelib.verb"
 
-	# install DXVK setup healper script
-	dosym "${EPREFIX}/usr/$(get_libdir)/dxvk-${PV}/bin/setup_dxvk.sh" "${EPREFIX}/usr/bin/dxvk-setup-${ABI}-${PV}"
+	    # create combined setup helper
+	    exeinto /usr/bin
+	    doexe "${T}/dxvk-setup-${PV}"
+    fi
 
-	# create combined setup helper
-	[[ ! -f "${S}/dxvk-setup-${PV}" ]] && echo '#!/bin/sh' > "${S}/dxvk-setup-${PV}" || die
-	echo "dxvk-setup-${ABI}-${PV}" '$@' >> "${S}/dxvk-setup-${PV}" || die
-
-	exeinto /usr/bin
-	doexe "${S}/dxvk-setup-${PV}"
-
-	meson_src_install
+    einstalldocs
 }
