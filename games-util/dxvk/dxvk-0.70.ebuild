@@ -41,6 +41,7 @@ PATCHES=(
 	"${FILESDIR}/${P}-fix-32bit-build.patch"
 	"${FILESDIR}/${P}-winelib-fix.patch"
 	"${FILESDIR}/${P}-option-for-utils.patch"
+	"${FILESDIR}/${P}-fix-tests.patch"
 )
 
 dxvk_check_requirements() {
@@ -72,6 +73,7 @@ src_prepare() {
 multilib_src_configure() {
 	local emesonargs=(
 		--libdir="$(get_libdir)/dxvk-${PV}"
+		--bindir="$(get_libdir)/dxvk-${PV}/bin"
 		$(meson_use test enable_tests)
 		--unity=on
 	)

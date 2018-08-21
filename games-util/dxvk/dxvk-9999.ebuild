@@ -40,6 +40,7 @@ DEPEND="${RDEPEND}
 PATCHES=(
 	"${FILESDIR}/dxvk-0.70-winelib-fix.patch"
 	"${FILESDIR}/dxvk-0.70-option-for-utils.patch"
+	"${FILESDIR}/dxvk-0.70-fix-tests.patch"
 )
 
 dxvk_check_requirements() {
@@ -71,6 +72,7 @@ src_prepare() {
 multilib_src_configure() {
 	local emesonargs=(
 		--libdir="$(get_libdir)/dxvk-${PV}"
+		--bindir="$(get_libdir)/dxvk-${PV}/bin"
 		$(meson_use test enable_tests)
 		--unity=on
 	)
