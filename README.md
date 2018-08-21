@@ -1,5 +1,5 @@
 # dxvk-gentoo-overlay
-Experimental ebuild repository for DXVK winelib builds
+Experimental ebuild repository for [DXVK](https://github.com/doitsujin/dxvk) winelib builds
 
 ## Examples
 ```sh
@@ -10,6 +10,8 @@ emerge -1 games-util/dxvk:9999 -q
 WINEPREFIX=/path/to/prefix dxvk-setup-9999
 
 # Example: Run DXVK test (+test use flag)
+# This one require "native" (read windows) d3dcompiler_47.dll
+# WINEDLLOVERRIDES="d3dcompiler_47,d3d11,dxgi=n"
 WINEPREFIX=/path/to/prefix wine /usr/lib/dxvk-0.70/bin/d3d11-triangle.exe.so
 ```
 
@@ -74,3 +76,7 @@ export WINEPREFIX="$(pwd)/dxvk-test"
 wine /usr/lib64/dxvk-0.70/bin/dxgi-factory.exe.so
 ```
 NOTE: will also produse `dxgi-factory_dxgi.log` in current directory. Usually there are several of them depending which library used.
+
+### Read more
+https://github.com/doitsujin/dxvk#hud - environment variables<br>
+https://github.com/doitsujin/dxvk/wiki/Configuration - configuration file example
