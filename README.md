@@ -1,5 +1,16 @@
 # dxvk-gentoo-overlay
 Experimental ebuild repository for [DXVK](https://github.com/doitsujin/dxvk) winelib builds
+```ini
+# Add to e.g. /etc/portage/repos.conf/external.conf
+[dxvk]
+location = /var/db/repos/dxvk
+sync-type = git
+sync-depth = 1
+sync-uri = https://github.com/pchome/dxvk-gentoo-overlay
+auto-sync = true
+priority = 60
+# Run `# emerge --sync dxvk` or `# eix-sync` (app-portage/eix)
+```
 
 ## Examples
 ```sh
