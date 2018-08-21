@@ -90,6 +90,13 @@ multilib_src_install() {
 
 multilib_src_install_all() {
     if use utils; then
+		if [[ ${PV} == "9999" ]]; then
+			sed -e "s/@is_git_ver@/1/" -i "${T}/setup_dxvk_winelib.verb" || die
+		fi
+
+		# clean undefined
+		sed -e "s/@.*@//" -i "${T}/setup_dxvk_winelib.verb" || die
+
 	    # install winetricks verb
 	    insinto "/usr/share/dxvk-${PV}"
 	    doins "${T}/setup_dxvk_winelib.verb"
