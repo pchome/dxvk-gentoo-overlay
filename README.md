@@ -25,6 +25,12 @@ $ WINEPREFIX=/path/to/prefix dxvk-setup-9999
 # WINEDLLOVERRIDES="d3dcompiler_47,d3d11,dxgi=n"
 $ WINEPREFIX=/path/to/prefix wine /usr/lib/dxvk-0.70/bin/d3d11-triangle.exe.so
 
+# Example: Run DXVK test (games-util/dxvk-tests)
+$ WINEPREFIX=/path/to/prefix dxvk-setup-0.70
+$ WINEPREFIX=/path/to/prefix dxgi-factory.exe
+# for 32 bit (/usr/lib/dxvk-tests/dxgi-factory.exe for 17.1 profile)
+$ WINEPREFIX=/path/to/prefix /usr/lib32/dxvk-tests/dxgi-factory.exe
+
 # Example: check/merge changes for 9999 versions
 emerge app-portage/smart-live-rebuild -q
 smart-live-rebuild -p
@@ -99,6 +105,13 @@ export WINEPREFIX="$(pwd)/dxvk-test"
 wine /usr/lib64/dxvk-0.70/bin/dxgi-factory.exe.so
 ```
 NOTE: will also produce `dxgi-factory_dxgi.log` in current directory. Usually there are several of them depending which library used.
+
+```sh
+# for games-util/dxvk-tests
+$ d3d11-formats.exe | less
+# NOTE: [testname]_[library].log files will be created in current directory
+```
+
 
 ### Known issues
 * Even when `.dll.so` libs renamed to `.dll` WINE recognizes them as both "builtin" and "native", so DLL Overrides don't work as expected.<br>
