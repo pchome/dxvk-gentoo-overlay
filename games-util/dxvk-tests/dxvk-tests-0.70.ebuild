@@ -45,6 +45,7 @@ PATCHES=(
 	"${FILESDIR}/${MY_P}-option-for-utils.patch"
 	"${FILESDIR}/${MY_P}-fix-tests.patch"
 	"${FILESDIR}/${MY_P}-tests-only.patch"
+	"${FILESDIR}/${MY_P}-winelib-wrapper.patch"
 )
 
 dxvk_check_requirements() {

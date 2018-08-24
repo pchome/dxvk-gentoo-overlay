@@ -1,0 +1,54 @@
+diff --git a/tests/d3d11/meson.build b/tests/d3d11/meson.build
+index ac3cf0f..38135be 100644
+--- a/tests/d3d11/meson.build
++++ b/tests/d3d11/meson.build
+@@ -1,6 +1,13 @@
+ test_d3d11_deps = [ util_dep, lib_dxgi, lib_d3d11, lib_d3dcompiler_47 ]
+ 
+-executable('d3d11-compute'+exe_ext,   files('test_d3d11_compute.cpp'),   dependencies : test_d3d11_deps, install : true, override_options: ['cpp_std='+dxvk_cpp_std])
+-executable('d3d11-formats'+exe_ext,   files('test_d3d11_formats.cpp'),   dependencies : test_d3d11_deps, install : true, override_options: ['cpp_std='+dxvk_cpp_std])
+-executable('d3d11-streamout'+exe_ext, files('test_d3d11_streamout.cpp'), dependencies : test_d3d11_deps, install : true, override_options: ['cpp_std='+dxvk_cpp_std])
+-executable('d3d11-triangle'+exe_ext,  files('test_d3d11_triangle.cpp'),  dependencies : test_d3d11_deps, install : true, override_options: ['cpp_std='+dxvk_cpp_std])
++executable('d3d11-compute',   files('test_d3d11_compute.cpp'),   dependencies : test_d3d11_deps, name_suffix: exe_ext, install : true, override_options: ['cpp_std='+dxvk_cpp_std])
++executable('d3d11-formats',   files('test_d3d11_formats.cpp'),   dependencies : test_d3d11_deps, name_suffix: exe_ext, install : true, override_options: ['cpp_std='+dxvk_cpp_std])
++executable('d3d11-streamout', files('test_d3d11_streamout.cpp'), dependencies : test_d3d11_deps, name_suffix: exe_ext, install : true, override_options: ['cpp_std='+dxvk_cpp_std])
++executable('d3d11-triangle',  files('test_d3d11_triangle.cpp'),  dependencies : test_d3d11_deps, name_suffix: exe_ext, install : true, override_options: ['cpp_std='+dxvk_cpp_std])
++
++if wrap_ext == 'exe'
++  executable('d3d11-compute.exe',  build_by_default: false, name_suffix: 'so', install: true)
++  executable('d3d11-formats.exe',  build_by_default: false, name_suffix: 'so', install: true)
++  executable('d3d11-streamout.exe',  build_by_default: false, name_suffix: 'so', install: true)
++  executable('d3d11-triangle.exe',  build_by_default: false, name_suffix: 'so', install: true)
++endif
+diff --git a/tests/dxbc/meson.build b/tests/dxbc/meson.build
+index 2378222..3f1155a 100644
+--- a/tests/dxbc/meson.build
++++ b/tests/dxbc/meson.build
+@@ -1,6 +1,11 @@
+ test_dxbc_deps = [ dxbc_dep, dxvk_dep ]
+ 
+-executable('dxbc-compiler'+exe_ext, files('test_dxbc_compiler.cpp'), dependencies : test_dxbc_deps, install : true, override_options: ['cpp_std='+dxvk_cpp_std])
+-executable('dxbc-disasm'+exe_ext,   files('test_dxbc_disasm.cpp'),   dependencies : [ test_dxbc_deps, lib_d3dcompiler_47 ], install : true, override_options: ['cpp_std='+dxvk_cpp_std])
+-#executable('hlsl-compiler'+exe_ext, files('test_hlsl_compiler.cpp'), dependencies : [ test_dxbc_deps, lib_d3dcompiler_47 ], install : true, override_options: ['cpp_std='+dxvk_cpp_std])
++executable('dxbc-compiler', files('test_dxbc_compiler.cpp'), dependencies : test_dxbc_deps, name_suffix: exe_ext, install : true, override_options: ['cpp_std='+dxvk_cpp_std])
++executable('dxbc-disasm',   files('test_dxbc_disasm.cpp'),   dependencies : [ test_dxbc_deps, lib_d3dcompiler_47 ], name_suffix: exe_ext, install : true, override_options: ['cpp_std='+dxvk_cpp_std])
++#executable('hlsl-compiler', files('test_hlsl_compiler.cpp'), dependencies : [ test_dxbc_deps, lib_d3dcompiler_47 ], install : name_suffix: exe_ext, true, override_options: ['cpp_std='+dxvk_cpp_std])
+ 
++if exe_ext == 'exe'
++  executable('dxbc-compiler.exe',  build_by_default: false, name_suffix: 'so', install: true)
++  executable('dxbc-disasm.exe',  build_by_default: false, name_suffix: 'so', install: true)
++  executable('hlsl-compiler.exe',  build_by_default: false, name_suffix: 'so', install: true)
++endif
+diff --git a/tests/dxgi/meson.build b/tests/dxgi/meson.build
+index 375323b..04b2cff 100644
+--- a/tests/dxgi/meson.build
++++ b/tests/dxgi/meson.build
+@@ -1,3 +1,7 @@
+ test_dxgi_deps = [ util_dep, lib_dxgi ]
+ 
+-executable('dxgi-factory'+exe_ext, files('test_dxgi_factory.cpp'), dependencies : test_dxgi_deps, install: true, override_options: ['cpp_std='+dxvk_cpp_std])
++executable('dxgi-factory', files('test_dxgi_factory.cpp'), dependencies : test_dxgi_deps, name_suffix: exe_ext, install: true, override_options: ['cpp_std='+dxvk_cpp_std])
++
++if wrap_ext == 'exe'
++  executable('dxgi-factory.exe',  build_by_default: false, name_suffix: 'so', install: true)
++endif
