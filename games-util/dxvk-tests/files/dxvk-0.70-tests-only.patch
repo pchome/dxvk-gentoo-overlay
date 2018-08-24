@@ -1,0 +1,15 @@
+diff --git a/src/meson.build b/src/meson.build
+index 9da8788..fda876a 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -1,7 +1,7 @@
+ subdir('util')
+ subdir('spirv')
+ subdir('dxvk')
+-subdir('dxgi')
++#subdir('dxgi')
+ subdir('dxbc')
+-subdir('d3d11')
+-subdir('d3d10')
++#subdir('d3d11')
++#subdir('d3d10')
