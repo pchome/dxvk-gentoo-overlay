@@ -68,7 +68,7 @@ multilib_src_configure() {
 	local emesonargs=(
 		-Denable_tests=true
 		-Denable_utils=false
-		#--unity=on # hlsl-compiler build error
+		--unity=on
 	)
 
 	[[ ${ABI} == "x86" ]] && emesonargs+=( --bindir="$(get_libdir)/${PN}" )

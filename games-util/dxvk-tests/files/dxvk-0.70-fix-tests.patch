@@ -1,6 +1,162 @@
+diff --git a/src/d3d10/d3d10_main.cpp b/src/d3d10/d3d10_main.cpp
+index 576c9da..e44fe0c 100644
+--- a/src/d3d10/d3d10_main.cpp
++++ b/src/d3d10/d3d10_main.cpp
+@@ -6,9 +6,7 @@
+ #include "../dxgi/dxgi_adapter.h"
+ #include "../dxgi/dxgi_device.h"
+
+-namespace dxvk {
+-  Logger Logger::s_instance("d3d10.log");
+-}
++static dxvk::Logger logger("d3d10.log");
+
+ extern "C" {
+   using namespace dxvk;
+diff --git a/src/d3d11/d3d11_main.cpp b/src/d3d11/d3d11_main.cpp
+index 92db016..2d584c9 100644
+--- a/src/d3d11/d3d11_main.cpp
++++ b/src/d3d11/d3d11_main.cpp
+@@ -8,9 +8,7 @@
+ #include "d3d11_interop.h"
+ #include "d3d11_present.h"
+
+-namespace dxvk {
+-  Logger Logger::s_instance("d3d11.log");
+-}
++static dxvk::Logger logger("d3d11.log");
+   
+ extern "C" {
+   using namespace dxvk;
+diff --git a/src/dxgi/dxgi_main.cpp b/src/dxgi/dxgi_main.cpp
+index dc72473..5232082 100644
+--- a/src/dxgi/dxgi_main.cpp
++++ b/src/dxgi/dxgi_main.cpp
+@@ -1,10 +1,10 @@
+ #include "dxgi_factory.h"
+ #include "dxgi_include.h"
+
++static dxvk::Logger logger("dxgi.log");
++
+ namespace dxvk {
+   
+-  Logger Logger::s_instance("dxgi.log");
+-  
+   HRESULT createDxgiFactory(REFIID riid, void **ppFactory) {
+     if (riid != __uuidof(IDXGIFactory)
+      && riid != __uuidof(IDXGIFactory1)
+diff --git a/src/util/log/log.cpp b/src/util/log/log.cpp
+index ab399ac..778cfd8 100644
+--- a/src/util/log/log.cpp
++++ b/src/util/log/log.cpp
+@@ -3,9 +3,12 @@
+ #include "../util_env.h"
+
+ namespace dxvk {
++
++  Logger *Logger::s_instance = nullptr;
+   
+   Logger::Logger(const std::string& file_name)
+   : m_minLevel(getMinLogLevel()) {
++    s_instance = this;
+     if (m_minLevel != LogLevel::None)
+       m_fileStream = std::ofstream(getFileName(file_name));
+   }
+@@ -15,32 +18,38 @@ namespace dxvk {
+   
+   
+   void Logger::trace(const std::string& message) {
+-    s_instance.emitMsg(LogLevel::Trace, message);
++    if (s_instance)
++      s_instance->emitMsg(LogLevel::Trace, message);
+   }
+   
+   
+   void Logger::debug(const std::string& message) {
+-    s_instance.emitMsg(LogLevel::Debug, message);
++    if (s_instance)
++      s_instance->emitMsg(LogLevel::Debug, message);
+   }
+   
+   
+   void Logger::info(const std::string& message) {
+-    s_instance.emitMsg(LogLevel::Info, message);
++    if (s_instance)
++      s_instance->emitMsg(LogLevel::Info, message);
+   }
+   
+   
+   void Logger::warn(const std::string& message) {
+-    s_instance.emitMsg(LogLevel::Warn, message);
++    if (s_instance)
++      s_instance->emitMsg(LogLevel::Warn, message);
+   }
+   
+   
+   void Logger::err(const std::string& message) {
+-    s_instance.emitMsg(LogLevel::Error, message);
++    if (s_instance)
++      s_instance->emitMsg(LogLevel::Error, message);
+   }
+   
+   
+   void Logger::log(LogLevel level, const std::string& message) {
+-    s_instance.emitMsg(level, message);
++    if (s_instance)
++      s_instance->emitMsg(level, message);
+   }
+   
+   
+diff --git a/src/util/log/log.h b/src/util/log/log.h
+index caa606b..89c3800 100644
+--- a/src/util/log/log.h
++++ b/src/util/log/log.h
+@@ -38,12 +38,12 @@ namespace dxvk {
+     static void log  (LogLevel level, const std::string& message);
+     
+     static LogLevel logLevel() {
+-      return s_instance.m_minLevel;
++      return s_instance ? s_instance->m_minLevel : LogLevel::None;
+     }
+     
+   private:
+     
+-    static Logger s_instance;
++    static Logger *s_instance;
+     
+     const LogLevel m_minLevel;
+     
+diff --git a/tests/dxbc/test_dxbc_compiler.cpp b/tests/dxbc/test_dxbc_compiler.cpp
+index 0754ded..2ea843e 100644
+--- a/tests/dxbc/test_dxbc_compiler.cpp
++++ b/tests/dxbc/test_dxbc_compiler.cpp
+@@ -8,9 +8,7 @@
+ #include <windows.h>
+ #include <windowsx.h>
+
+-namespace dxvk {
+-  Logger Logger::s_instance("dxbc-compiler.log");
+-}
++static dxvk::Logger logger("dxbc-compiler.log");
+
+ using namespace dxvk;
+
+From ff729e5058b166078ab574b6bb39e0750bd2942c Mon Sep 17 00:00:00 2001
+From: Jacek Caban <jacek@codeweavers.com>
+Date: Mon, 27 Aug 2018 14:11:54 +0200
+Subject: [PATCH 1/2] [build] Use d3dcompiler as lib name when linking to
+ d3dcompiler_47 in winelib build.
+
+As of https://source.winehq.org/git/wine.git/commitdiff/169c033bda314358ee3ed085bffedf4bf763bfcf Wine provides an importlib d3dcompiler that links to d3dcompiler_47, just like MSVC does.
+---
+ meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/meson.build b/meson.build
+index 23e848ed..73405257 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -30,7 +30,7 @@
+@@ -30,7 +30,7 @@ if meson.get_cross_property('winelib', false)
    lib_d3d11   = declare_dependency(link_args: [ '-ld3d11' ])
    lib_dxgi    = declare_dependency(link_args: [ '-ldxgi' ])
    lib_d3dcompiler_43 = declare_dependency(link_args: [ '-L'+dxvk_library_path, '-ld3dcompiler_43' ])
@@ -9,12 +165,73 @@
    exe_ext = '.exe.so'
    dll_ext = '.dll'
    def_spec_ext = '.spec'
---- a/tests/dxbc/meson.build
-+++ b/tests/dxbc/meson.build
-@@ -2,5 +2,5 @@
 
- executable('dxbc-compiler'+exe_ext, files('test_dxbc_compiler.cpp'), dependencies : test_dxbc_deps, install : true, override_options: ['cpp_std='+dxvk_cpp_std])
- executable('dxbc-disasm'+exe_ext,   files('test_dxbc_disasm.cpp'),   dependencies : [ test_dxbc_deps, lib_d3dcompiler_47 ], install : true, override_options: ['cpp_std='+dxvk_cpp_std])
--executable('hlsl-compiler'+exe_ext, files('test_hlsl_compiler.cpp'), dependencies : [ test_dxbc_deps, lib_d3dcompiler_47 ], install : true, override_options: ['cpp_std='+dxvk_cpp_std])
-+executable('hlsl-compiler'+exe_ext, files('test_hlsl_compiler.cpp'), dependencies : [ test_dxbc_deps, lib_d3dcompiler_47 ], install : true, override_options: ['cpp_std='+dxvk_cpp_std])
+From 436244f8b4e01be994007671d68b2887a17964f1 Mon Sep 17 00:00:00 2001
+From: Jacek Caban <jacek@codeweavers.com>
+Date: Mon, 27 Aug 2018 14:15:34 +0200
+Subject: [PATCH 2/2] [util] Handle WCHAR strings in str::format.
 
+---
+ src/util/util_string.h           | 12 +++++++++---
+ tests/dxgi/test_dxgi_factory.cpp | 10 ++--------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/src/util/util_string.h b/src/util/util_string.h
+index e7e44b60..3a176a35 100644
+--- a/src/util/util_string.h
++++ b/src/util/util_string.h
+@@ -7,8 +7,16 @@
+ 
+ namespace dxvk::str {
+   
+-  inline void format1(std::stringstream&) { }
++  std::string fromws(const WCHAR *ws);
+   
++  inline void format1(std::stringstream&) { }
++
++  template<typename... Tx>
++  void format1(std::stringstream& str, const WCHAR *arg, const Tx&... args) {
++    str << fromws(arg);
++    format1(str, args...);
++  }
++
+   template<typename T, typename... Tx>
+   void format1(std::stringstream& str, const T& arg, const Tx&... args) {
+     str << arg;
+@@ -22,6 +30,4 @@ namespace dxvk::str {
+     return stream.str();
+   }
+   
+-  std::string fromws(const WCHAR *ws);
+-  
+ }
+diff --git a/tests/dxgi/test_dxgi_factory.cpp b/tests/dxgi/test_dxgi_factory.cpp
+index adbcb3d5..526be92e 100644
+--- a/tests/dxgi/test_dxgi_factory.cpp
++++ b/tests/dxgi/test_dxgi_factory.cpp
+@@ -38,11 +38,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
+       return 1;
+     }
+     
+-    std::array<char, 257> chars;
+-    std::wcstombs(chars.data(), desc.Description, chars.size() - 1);
+-    
+     std::cout << str::format("Adapter ", i, ":") << std::endl;
+-    std::cout << str::format(" ", chars.data()) << std::endl;
++    std::cout << str::format(" ", desc.Description) << std::endl;
+     std::cout << str::format(" Vendor: ", desc.VendorId) << std::endl;
+     std::cout << str::format(" Device: ", desc.DeviceId) << std::endl;
+     std::cout << str::format(" Dedicated RAM: ", desc.DedicatedVideoMemory) << std::endl;
+@@ -60,11 +57,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
+         return 1;
+       }
+       
+-      std::array<char, 257> chars;
+-      std::wcstombs(chars.data(), desc.DeviceName, chars.size() - 1);
+-      
+       std::cout << str::format(" Output ", j, ":") << std::endl;
+-      std::cout << str::format("  ", chars.data()) << std::endl;
++      std::cout << str::format("  ", desc.DeviceName) << std::endl;
+       std::cout << str::format("  Coordinates: ",
+         desc.DesktopCoordinates.left, ",",
+         desc.DesktopCoordinates.top, ":",
