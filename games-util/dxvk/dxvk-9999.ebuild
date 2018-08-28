@@ -38,7 +38,6 @@ DEPEND="${RDEPEND}
 	dev-util/glslang"
 
 PATCHES=(
-	"${FILESDIR}/dxvk-0.70-winelib-fix.patch"
 	"${FILESDIR}/dxvk-0.70-option-for-utils.patch"
 	"${FILESDIR}/dxvk-0.70-fix-tests.patch"
 )
