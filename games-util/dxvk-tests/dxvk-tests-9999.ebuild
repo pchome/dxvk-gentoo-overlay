@@ -41,7 +41,7 @@ DEPEND="${RDEPEND}
 
 PATCHES=(
 	"${FILESDIR}/dxvk-0.70-option-for-utils.patch"
-	"${FILESDIR}/dxvk-0.70-fix-tests.patch"
+	"${FILESDIR}/${MY_P}-fix-tests.patch"
 	"${FILESDIR}/dxvk-0.70-tests-only.patch"
 	"${FILESDIR}/dxvk-0.70--winelib-wrapper.patch"
 )
