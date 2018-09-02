@@ -141,14 +141,3 @@ index 0754ded..2ea843e 100644
 
  using namespace dxvk;
 
-From ff729e5058b166078ab574b6bb39e0750bd2942c Mon Sep 17 00:00:00 2001
-From: Jacek Caban <jacek@codeweavers.com>
-Date: Mon, 27 Aug 2018 14:11:54 +0200
-Subject: [PATCH 1/2] [build] Use d3dcompiler as lib name when linking to
- d3dcompiler_47 in winelib build.
-
-As of https://source.winehq.org/git/wine.git/commitdiff/169c033bda314358ee3ed085bffedf4bf763bfcf Wine provides an importlib d3dcompiler that links to d3dcompiler_47, just like MSVC does.
----
- meson.build | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
