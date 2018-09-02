@@ -13,10 +13,18 @@ AMD64_NV_PACKAGE="NVIDIA-Linux-x86_64-${PV}"
 ARM_NV_PACKAGE="NVIDIA-Linux-armv7l-gnueabihf-${PV}"
 
 NV_URI="http://us.download.nvidia.com/XFree86/"
+NV_DEV_URI="https://developer.nvidia.com/"
+NV_TOOLS_PV=$(get_version_component_range 1-2 ${PV})
+
+if [[ $(get_version_component_count ${PV}) -gt 2 ]]; then
+	AMD64_URI="${NV_DEV_URI}linux-$(delete_all_version_separators ${PV}) -> NVIDIA-Linux-x86_64-${PV}.run"
+else
+	AMD64_URI="${NV_URI}Linux-x86_64/${PV}/${AMD64_NV_PACKAGE}.run"
+fi
 SRC_URI="
-	amd64? ( ${NV_URI}Linux-x86_64/${PV}/${AMD64_NV_PACKAGE}.run )
+	amd64? ( ${AMD64_URI} )
 	tools? (
-		https://download.nvidia.com/XFree86/nvidia-settings/nvidia-settings-${PV}.tar.bz2
+		https://download.nvidia.com/XFree86/nvidia-settings/nvidia-settings-${NV_TOOLS_PV}.tar.bz2
 	)
 "
 
@@ -184,7 +192,7 @@ src_prepare() {
 	if use tools; then
 		cp "${FILESDIR}"/nvidia-settings-linker.patch "${WORKDIR}" || die
 		sed -i \
-			-e "s:@PV@:${PV}:g" \
+			-e "s:@PV@:${NV_TOOLS_PV}:g" \
 			"${WORKDIR}"/nvidia-settings-linker.patch || die
 		eapply "${WORKDIR}"/nvidia-settings-linker.patch
 	fi
@@ -211,7 +219,7 @@ src_compile() {
 	fi
 
 	if use tools; then
-		emake -C "${S}"/nvidia-settings-${PV}/src \
+		emake -C "${S}"/nvidia-settings-${NV_TOOLS_PV}/src \
 			AR="$(tc-getAR)" \
 			CC="$(tc-getCC)" \
 			DO_STRIP= \
@@ -222,7 +230,7 @@ src_compile() {
 			RANLIB="$(tc-getRANLIB)" \
 			build-xnvctrl
 
-		emake -C "${S}"/nvidia-settings-${PV}/src \
+		emake -C "${S}"/nvidia-settings-${NV_TOOLS_PV}/src \
 			CC="$(tc-getCC)" \
 			DO_STRIP= \
 			GTK3_AVAILABLE=$(usex gtk3 1 0) \
@@ -391,7 +399,7 @@ src_install() {
 	fi
 
 	if use tools; then
-		emake -C "${S}"/nvidia-settings-${PV}/src/ \
+		emake -C "${S}"/nvidia-settings-${NV_TOOLS_PV}/src/ \
 			DESTDIR="${D}" \
 			GTK3_AVAILABLE=$(usex gtk3 1 0) \
 			LIBDIR="${D}/usr/$(get_libdir)" \
@@ -402,10 +410,10 @@ src_install() {
 			install
 
 		if use static-libs; then
-			dolib.a "${S}"/nvidia-settings-${PV}/src/libXNVCtrl/libXNVCtrl.a
+			dolib.a "${S}"/nvidia-settings-${NV_TOOLS_PV}/src/libXNVCtrl/libXNVCtrl.a
 
 			insinto /usr/include/NVCtrl
-			doins "${S}"/nvidia-settings-${PV}/src/libXNVCtrl/*.h
+			doins "${S}"/nvidia-settings-${NV_TOOLS_PV}/src/libXNVCtrl/*.h
 		fi
 
 		insinto /usr/share/nvidia/
