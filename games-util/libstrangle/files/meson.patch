@@ -1,13 +1,10 @@
 --- a/dev/null
 +++ b/meson.build
-@@ -0,0 +1,12 @@
+@@ -0,0 +1,9 @@
 +project('libstrangle', ['c'], default_options : [ 'c_std=c99', 'c_link_args=["-Wl,-z,relro,-z,now"]' ])
 +
 +add_project_arguments('-DHOOK_DLSYM', language : 'c')
 +add_project_arguments('-rdynamic', '-fvisibility=hidden', language : 'c')
-+
-+#lib_dl   = declare_dependency(link_args: [ '-ldl' ])
-+#lib_rt   = declare_dependency(link_args: [ '-lrt' ])
 +
 +lib_dl   = meson.get_compiler('c').find_library('dl')
 +lib_rt   = meson.get_compiler('c').find_library('rt')

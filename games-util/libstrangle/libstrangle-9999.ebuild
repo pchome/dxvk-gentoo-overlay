@@ -10,7 +10,6 @@ inherit meson multilib-minimal git-r3
 DESCRIPTION="Frame rate limiter for Linux/OpenGL/Vulkan"
 HOMEPAGE="https://gitlab.com/torkel104/libstrangle"
 EGIT_REPO_URI="https://gitlab.com/torkel104/libstrangle.git"
-EGIT_BRANCH="test"
 
 LICENSE="GPL-3"
 SLOT="0"
