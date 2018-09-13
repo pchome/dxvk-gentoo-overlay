@@ -10,19 +10,18 @@ inherit meson-winegcc multilib-minimal
 DESCRIPTION="A Vulkan-based translation layer for Direct3D 10/11 (tests)"
 HOMEPAGE="https://github.com/doitsujin/dxvk"
 
-MY_P="${P/-tests/}"
-
 if [[ ${PV} == "9999" ]] ; then
 	EGIT_REPO_URI="https://github.com/doitsujin/dxvk.git"
 	EGIT_BRANCH="master"
 	inherit git-r3
 	SRC_URI=""
 else
+	MY_P="${P/-tests/}"
 	SRC_URI="https://github.com/doitsujin/dxvk/archive/v${PV}.tar.gz -> ${MY_P}.tar.gz"
 	KEYWORDS="-* ~amd64"
+	S="${WORKDIR}/${MY_P}"
 fi
 
-S="${WORKDIR}/${MY_P}"
 LICENSE="ZLIB"
 SLOT=0
 RESTRICT="test"
