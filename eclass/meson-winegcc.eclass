@@ -183,7 +183,7 @@ _meson_create_cross_file() {
 	c_args = $(_meson_env_array "${CFLAGS} ${CPPFLAGS}")
 	c_link_args = $(_meson_env_array "${CFLAGS} ${LDFLAGS}")
 	cpp_args = $(_meson_env_array "${CXXFLAGS} ${CPPFLAGS} --no-gnu-unique -Wno-attributes")
-	cpp_link_args = $(_meson_env_array "${CXXFLAGS} ${LDFLAGS} -mwindows")
+	cpp_link_args = $(_meson_env_array "${CXXFLAGS} ${LDFLAGS} -mwindows -ldl")
 	fortran_args = $(_meson_env_array "${FCFLAGS}")
 	fortran_link_args = $(_meson_env_array "${FCFLAGS} ${LDFLAGS}")
 	objc_args = $(_meson_env_array "${OBJCFLAGS} ${CPPFLAGS}")
