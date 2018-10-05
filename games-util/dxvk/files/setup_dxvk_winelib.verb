@@ -19,7 +19,7 @@ DXVK_ROOT_DIR_32=@dll_dir_x86@
 DXVK_ROOT_DIR_64=@dll_dir_amd64@
 IS_GIT_VERSION=@is_git_ver@
 
-[[ -z ${IS_GIT_VERSION} ]] && INSTALL_CMD="cp --remove-destination" || INSTALL_CMD="ln -sf"
+[ -z "${IS_GIT_VERSION}" ] && INSTALL_CMD="cp --remove-destination" || INSTALL_CMD="ln -sf"
 
 load_setup_dxvk_winelib()
 {
@@ -28,16 +28,16 @@ load_setup_dxvk_winelib()
         exit 1
     }
 
-    [[ ! -z ${DXVK_ROOT_DIR_32} ]] || die "for win32 arch"
-    [[   -e ${DXVK_ROOT_DIR_32} ]] || die "in ${DXVK_ROOT_DIR_32}"
+    [ ! -z "${DXVK_ROOT_DIR_32}" ] || die "for win32 arch"
+    [   -e "${DXVK_ROOT_DIR_32}" ] || die "in ${DXVK_ROOT_DIR_32}"
 
     for f in $file{1..5}; do
         w_try $INSTALL_CMD "${DXVK_ROOT_DIR_32}/${f/dll/dll.so}" "${W_SYSTEM32_DLLS}/${f}"
     done
 
-    if [[ ${W_ARCH} == "win64" ]]; then
-	    [[ ! -z ${DXVK_ROOT_DIR_64} ]] || die "for win64 arch"
-        [[   -e ${DXVK_ROOT_DIR_64} ]] || die "in ${DXVK_ROOT_DIR_64}"
+    if [ "${W_ARCH}" == "win64" ]; then
+        [ ! -z "${DXVK_ROOT_DIR_64}" ] || die "for win64 arch"
+        [   -e "${DXVK_ROOT_DIR_64}" ] || die "in ${DXVK_ROOT_DIR_64}"
 
         for f in $file{1..5}; do
             w_try $INSTALL_CMD "${DXVK_ROOT_DIR_64}/${f/dll/dll.so}" "${W_SYSTEM64_DLLS}/${f}"
