@@ -61,7 +61,7 @@ pkg_setup() {
 src_prepare() {
 	# Hack for -fwhole-program
 	use experimental && PATCHES+=(
-	    "${FILESDIR}/dxvk-0.80-whole-program-support.patch"
+	    "${FILESDIR}/dxvk-0.90-MipLODBias.patch"
 	)
 
 	if use utils; then
