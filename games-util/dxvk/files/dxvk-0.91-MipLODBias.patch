@@ -1,0 +1,43 @@
+--- a/src/d3d11/d3d11_options.cpp
++++ b/src/d3d11/d3d11_options.cpp
+@@ -10,6 +10,7 @@
+     this->fakeStreamOutSupport  = config.getOption<bool>("d3d11.fakeStreamOutSupport",  false);
+     this->maxTessFactor         = config.getOption<int32_t>("d3d11.maxTessFactor",      0);
+     this->samplerAnisotropy     = config.getOption<int32_t>("d3d11.samplerAnisotropy",  -1);
++    this->samplerMipLODBias     = config.getOption<int32_t>("d3d11.samplerMipLODBias",  -2);
+     this->deferSurfaceCreation  = config.getOption<bool>("dxgi.deferSurfaceCreation",   false);
+     this->numBackBuffers        = config.getOption<int32_t>("dxgi.numBackBuffers", 0);
+     this->syncInterval          = config.getOption<int32_t>("dxgi.syncInterval", -1);
+--- a/src/d3d11/d3d11_options.h
++++ b/src/d3d11/d3d11_options.h
+@@ -54,6 +54,12 @@
+     /// given anisotropy value for all samplers.
+     int32_t samplerAnisotropy;
+     
++    /// Mip map LOD bias override
++    ///
++    /// Enforces LOD bias with the given value
++    /// for all samplers.
++    int32_t samplerMipLODBias;
++
+     /// Back buffer count for the Vulkan swap chain.
+     /// Overrides DXGI_SWAP_CHAIN_DESC::BufferCount.
+     int32_t numBackBuffers;
+diff --git a/src/d3d11/d3d11_sampler.cpp b/src/d3d11/d3d11_sampler.cpp
+index 189cdb7..d615519 100644
+--- a/src/d3d11/d3d11_sampler.cpp
++++ b/src/d3d11/d3d11_sampler.cpp
+@@ -54,6 +54,13 @@ namespace dxvk {
+       info.maxAnisotropy = float(samplerAnisotropyOption);
+     }
+     
++    // Enforce mip map lod bias
++    int32_t samplerMipLODBiasOption = device->GetOptions()->samplerMipLODBias;
++
++    if (samplerMipLODBiasOption >= -1) {
++      info.mipmapLodBias = float(samplerMipLODBiasOption);
++    }
++    
+     m_sampler = device->GetDXVKDevice()->createSampler(info);
+   }
+   
