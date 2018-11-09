@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>pchome@pchome.local</email>
+		<name>pchome</name>
+	</maintainer>
+	<use>
+		<flag name="ffmpeg">Support for decoding xWMA resources using FFmpeg</flag>
+		<flag name="xnasong">Support XNASong</flag>
+	</use>
+	<upstream>
+		<remote-id type="github">FNA-XNA/FAudio</remote-id>
+	</upstream>
+</pkgmetadata>
