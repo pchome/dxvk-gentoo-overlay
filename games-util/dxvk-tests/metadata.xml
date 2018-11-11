@@ -5,9 +5,6 @@
 		<email>pchome@pchome.local</email>
 		<name>pchome</name>
 	</maintainer>
-	<use>
-		<flag name="utils">Installs a verb used by <pkg>app-emulation/winetricks</pkg></flag>
-	</use>
 	<upstream>
 		<remote-id type="github">doitsujin/dxvk</remote-id>
 	</upstream>
