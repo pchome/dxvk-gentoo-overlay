@@ -33,6 +33,7 @@ RDEPEND="
 		>=app-emulation/wine-d3d9-3.14:*[${MULTILIB_USEDEP},vulkan]
 		>=app-emulation/wine-any-3.14:*[${MULTILIB_USEDEP},vulkan]
 	)
+	test? ( games-util/dxvk-tests )
 	utils? ( app-emulation/winetricks )"
 DEPEND="${RDEPEND}
 	dev-util/glslang"
@@ -77,7 +78,7 @@ multilib_src_configure() {
 	local emesonargs=(
 		--libdir="$(get_libdir)/dxvk-${PV}"
 		--bindir="$(get_libdir)/dxvk-${PV}/bin"
-		$(meson_use test enable_tests)
+		-Denable_tests=false
 		$(meson_use experimental whole_program)
 		--unity=on
 	)
