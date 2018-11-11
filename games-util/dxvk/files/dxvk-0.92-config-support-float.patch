@@ -1,0 +1,38 @@
+--- a/src/util/config/config.cpp
++++ b/src/util/config/config.cpp
+@@ -209,6 +209,21 @@
+   }
+ 
+ 
++  bool Config::parseOptionValue(
++    const std::string&  value,
++          float&      result) {
++    if (value.size() == 0)
++      return false;
++    try {
++      result = std::stof(value);
++    } catch (...) {
++      // error: 'std::invalid_argument' or 'std::out_of_range'
++      return false;
++    }
++    return true;
++  }
++
++
+   Config Config::getAppConfig(const std::string& appName) {
+     auto appConfig = g_appDefaults.find(appName);
+     if (appConfig != g_appDefaults.end()) {
+--- a/src/util/config/config.h
++++ b/src/util/config/config.h
+@@ -109,6 +109,10 @@
+       const std::string&  value,
+             int32_t&      result);
+ 
++    static bool parseOptionValue(
++      const std::string&  value,
++            float&        result);
++
+   };
+ 
+ }
+\
