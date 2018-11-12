@@ -17,12 +17,11 @@ new file mode 100644
 index 0000000..890e81a
 --- /dev/null
 +++ b/meson.build
-@@ -0,0 +1,20 @@
+@@ -0,0 +1,19 @@
 +project('FAudio', ['c'])
 +
 +cc = meson.get_compiler('c')
 +
-+lib_m   = cc.find_library('m')
 +sdl_dep = dependency('sdl2', version : '>= 2.0')
 +
 +# Check FFmpeg
@@ -33,7 +32,7 @@ index 0000000..890e81a
 +endif
 +
 +faudio_deps = [
-+  sdl_dep, lib_m,
++  sdl_dep,
 +  get_option('enable_ffmpeg') ? [lib_avcodec, lib_avutil] : []
 +]
 +
