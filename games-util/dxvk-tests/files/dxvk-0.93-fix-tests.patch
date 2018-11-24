@@ -1,0 +1,143 @@
+diff --git a/src/d3d10/d3d10_main.cpp b/src/d3d10/d3d10_main.cpp
+index 576c9da..e44fe0c 100644
+--- a/src/d3d10/d3d10_main.cpp
++++ b/src/d3d10/d3d10_main.cpp
+@@ -6,9 +6,7 @@
+ #include "../dxgi/dxgi_adapter.h"
+ #include "../dxgi/dxgi_device.h"
+
+-namespace dxvk {
+-  Logger Logger::s_instance("d3d10.log");
+-}
++static dxvk::Logger logger("d3d10.log");
+
+ extern "C" {
+   using namespace dxvk;
+diff --git a/src/d3d11/d3d11_main.cpp b/src/d3d11/d3d11_main.cpp
+index 92db016..2d584c9 100644
+--- a/src/d3d11/d3d11_main.cpp
++++ b/src/d3d11/d3d11_main.cpp
+@@ -8,9 +8,7 @@
+ #include "d3d11_interop.h"
+ #include "d3d11_present.h"
+
+-namespace dxvk {
+-  Logger Logger::s_instance("d3d11.log");
+-}
++static dxvk::Logger logger("d3d11.log");
+   
+ extern "C" {
+   using namespace dxvk;
+diff --git a/src/dxgi/dxgi_main.cpp b/src/dxgi/dxgi_main.cpp
+index dc72473..5232082 100644
+--- a/src/dxgi/dxgi_main.cpp
++++ b/src/dxgi/dxgi_main.cpp
+@@ -1,10 +1,10 @@
+ #include "dxgi_factory.h"
+ #include "dxgi_include.h"
+
++static dxvk::Logger logger("dxgi.log");
++
+ namespace dxvk {
+   
+-  Logger Logger::s_instance("dxgi.log");
+-  
+   HRESULT createDxgiFactory(UINT Flags, REFIID riid, void **ppFactory) {
+     Com<DxgiFactory> factory = new DxgiFactory(Flags);
+     HRESULT hr = factory->QueryInterface(riid, ppFactory);
+diff --git a/src/util/log/log.cpp b/src/util/log/log.cpp
+index ab399ac..778cfd8 100644
+--- a/src/util/log/log.cpp
++++ b/src/util/log/log.cpp
+@@ -3,9 +3,12 @@
+ #include "../util_env.h"
+
+ namespace dxvk {
++
++  Logger *Logger::s_instance = nullptr;
+   
+   Logger::Logger(const std::string& file_name)
+   : m_minLevel(getMinLogLevel()) {
++    s_instance = this;
+     if (m_minLevel != LogLevel::None)
+       m_fileStream = std::ofstream(getFileName(file_name));
+   }
+@@ -15,32 +18,38 @@ namespace dxvk {
+   
+   
+   void Logger::trace(const std::string& message) {
+-    s_instance.emitMsg(LogLevel::Trace, message);
++    if (s_instance)
++      s_instance->emitMsg(LogLevel::Trace, message);
+   }
+   
+   
+   void Logger::debug(const std::string& message) {
+-    s_instance.emitMsg(LogLevel::Debug, message);
++    if (s_instance)
++      s_instance->emitMsg(LogLevel::Debug, message);
+   }
+   
+   
+   void Logger::info(const std::string& message) {
+-    s_instance.emitMsg(LogLevel::Info, message);
++    if (s_instance)
++      s_instance->emitMsg(LogLevel::Info, message);
+   }
+   
+   
+   void Logger::warn(const std::string& message) {
+-    s_instance.emitMsg(LogLevel::Warn, message);
++    if (s_instance)
++      s_instance->emitMsg(LogLevel::Warn, message);
+   }
+   
+   
+   void Logger::err(const std::string& message) {
+-    s_instance.emitMsg(LogLevel::Error, message);
++    if (s_instance)
++      s_instance->emitMsg(LogLevel::Error, message);
+   }
+   
+   
+   void Logger::log(LogLevel level, const std::string& message) {
+-    s_instance.emitMsg(level, message);
++    if (s_instance)
++      s_instance->emitMsg(level, message);
+   }
+   
+   
+diff --git a/src/util/log/log.h b/src/util/log/log.h
+index caa606b..89c3800 100644
+--- a/src/util/log/log.h
++++ b/src/util/log/log.h
+@@ -38,12 +38,12 @@ namespace dxvk {
+     static void log  (LogLevel level, const std::string& message);
+     
+     static LogLevel logLevel() {
+-      return s_instance.m_minLevel;
++      return s_instance ? s_instance->m_minLevel : LogLevel::None;
+     }
+     
+   private:
+     
+-    static Logger s_instance;
++    static Logger *s_instance;
+     
+     const LogLevel m_minLevel;
+     
+diff --git a/tests/dxbc/test_dxbc_compiler.cpp b/tests/dxbc/test_dxbc_compiler.cpp
+index 0754ded..2ea843e 100644
+--- a/tests/dxbc/test_dxbc_compiler.cpp
++++ b/tests/dxbc/test_dxbc_compiler.cpp
+@@ -8,9 +8,7 @@
+ #include <windows.h>
+ #include <windowsx.h>
+
+-namespace dxvk {
+-  Logger Logger::s_instance("dxbc-compiler.log");
+-}
++static dxvk::Logger logger("dxbc-compiler.log");
+
+ using namespace dxvk;
+
