@@ -40,7 +40,7 @@ DEPEND="${RDEPEND}
 
 PATCHES=(
 	"${FILESDIR}/dxvk-0.70-option-for-utils.patch"
-	"${FILESDIR}/dxvk-0.71-fix-tests.patch"
+	"${FILESDIR}/dxvk-0.93-fix-tests.patch"
 )
 
 dxvk_check_requirements() {
