@@ -17,26 +17,40 @@ new file mode 100644
 index 0000000..890e81a
 --- /dev/null
 +++ b/meson.build
-@@ -0,0 +1,19 @@
+@@ -0,0 +1,33 @@
 +project('FAudio', ['c'])
 +
 +cc = meson.get_compiler('c')
 +
-+sdl_dep = dependency('sdl2', version : '>= 2.0')
++sdl_dep = dependency('sdl2', version : '>= 2.0.9', method : 'pkg-config')
 +
 +# Check FFmpeg
++ffmpeg_dep = []
 +if get_option('enable_ffmpeg')
 +  add_project_arguments('-DHAVE_FFMPEG=1', language : 'c')
-+  lib_avcodec = cc.find_library('avcodec')
-+  lib_avutil  = cc.find_library('avutil')
++  ffmpeg_dep = [
++    dependency('libavcodec', version : '>= 50', method : 'pkg-config'),
++    dependency('libavutil',  version : '>= 50', method : 'pkg-config'),
++  ]
 +endif
 +
-+faudio_deps = [
-+  sdl_dep,
-+  get_option('enable_ffmpeg') ? [lib_avcodec, lib_avutil] : []
-+]
++faudio_deps = [ sdl_dep, ffmpeg_dep ]
++
++if get_option('buildtype') != 'debug'
++  add_project_arguments('-DFAUDIO_RELEASE=1', language : 'c')
++endif
 +
 +subdir('src')
++
++pkg = import('pkgconfig')
++pkg.generate(
++  libraries : faudio_lib,
++  subdirs : ['.'],
++  version : '1.0',
++  name : 'libFAudio',
++  filebase : 'FAudio',
++  description : 'FAudio library.')
++
 diff --git a/meson_options.txt b/meson_options.txt
 new file mode 100644
 index 0000000..9d8b5cb
