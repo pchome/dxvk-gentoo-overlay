@@ -64,6 +64,7 @@ src_prepare() {
 	use experimental && PATCHES+=(
 	    "${FILESDIR}/dxvk-0.92-MipLODBias.patch"
 	    "${FILESDIR}/dxvk-0.92-config-support-float.patch"
+	    "${FILESDIR}/dxvk-0.93-whole-program-support.patch"
 	)
 
 	if use utils; then
