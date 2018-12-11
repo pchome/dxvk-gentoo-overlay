@@ -6,8 +6,9 @@
 		<name>pchome</name>
 	</maintainer>
 	<use>
-		<flag name="ffmpeg">Support for decoding xWMA resources using FFmpeg</flag>
+		<flag name="ffmpeg">Enable FFmpeg support (WMA, XMA)</flag>
 		<flag name="xnasong">Support XNASong</flag>
+		<flag name="debug">Enable FAudio's debug functionality even in Release mode</flag>
 	</use>
 	<upstream>
 		<remote-id type="github">FNA-XNA/FAudio</remote-id>
