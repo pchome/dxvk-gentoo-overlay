@@ -207,7 +207,9 @@ src_compile() {
 		MAKE="$(get_bmake)" CFLAGS="-Wno-sign-compare" emake CC="$(tc-getCC)" \
 			LD="$(tc-getLD)" LDFLAGS="$(raw-ldflags)" || die
 	elif use driver && use kernel_linux; then
-		MAKEOPTS=-j1 linux-mod_src_compile
+		BUILD_TARGETS=module linux-mod_src_compile \
+			KERNELRELEASE="${KV_FULL}" \
+			src="${KERNEL_DIR}"
 	fi
 
 	if use tools; then
