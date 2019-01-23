@@ -62,7 +62,7 @@ pkg_setup() {
 src_prepare() {
 	# Hack for -fwhole-program
 	use experimental && PATCHES+=(
-	    "${FILESDIR}/dxvk-0.92-MipLODBias.patch"
+	    "${FILESDIR}/dxvk-0.96-MipLODBias.patch"
 	    "${FILESDIR}/dxvk-0.92-config-support-float.patch"
 	    "${FILESDIR}/dxvk-0.93-whole-program-support.patch"
 	)
