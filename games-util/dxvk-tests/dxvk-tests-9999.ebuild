@@ -39,7 +39,6 @@ DEPEND="${RDEPEND}
 	dev-util/glslang"
 
 PATCHES=(
-	"${FILESDIR}/dxvk-0.70-option-for-utils.patch"
 	"${FILESDIR}/dxvk-0.93-fix-tests.patch"
 	"${FILESDIR}/dxvk-0.70-tests-only.patch"
 	"${FILESDIR}/dxvk-0.92-winelib-wrapper.patch"
@@ -64,7 +63,6 @@ pkg_setup() {
 multilib_src_configure() {
 	local emesonargs=(
 		-Denable_tests=true
-		-Denable_utils=false
 		--unity=on
 	)
 
