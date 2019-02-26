@@ -1,0 +1,551 @@
+From 5f669dc63b0f7c4951e62008555fa27031262a09 Mon Sep 17 00:00:00 2001
+From: pchome <pchome@pchome.local>
+Date: Sat, 1 Dec 2018 18:40:53 +0200
+Subject: [PATCH] dxvk-0.93-whole-program-support
+
+---
+ meson.build                        |  8 ++++
+ meson_options.txt                  |  1 +
+ src/d3d10/d3d10.spec               |  8 ++--
+ src/d3d10/d3d10_1.spec             | 27 ++++++-----
+ src/d3d10/d3d10_main.cpp           | 72 +++++++++++++++++++++---------
+ src/d3d10/meson.build              | 31 ++++++++++---
+ src/d3d11/meson.build              | 16 ++++++-
+ src/dxbc/meson.build               |  1 +
+ src/dxgi/dxgi_include.h            |  2 +-
+ src/dxgi/meson.build               | 19 ++++++--
+ src/dxvk/meson.build               |  3 ++
+ src/spirv/meson.build              |  1 +
+ src/util/meson.build               |  3 +-
+ src/util/sha1/{sha1.c => sha1.cpp} |  0
+ src/vulkan/meson.build             |  3 ++
+ 15 files changed, 144 insertions(+), 51 deletions(-)
+ rename src/util/sha1/{sha1.c => sha1.cpp} (100%)
+
+diff --git a/meson.build b/meson.build
+index 230282f..1560c30 100644
+--- a/meson.build
++++ b/meson.build
+@@ -4,6 +4,13 @@ cpu_family = target_machine.cpu_family()
+ 
+ add_project_arguments('-DNOMINMAX', language : 'cpp')
+ 
++if get_option('whole_program')
++  add_project_arguments('-fwhole-program', language : 'cpp')
++  add_project_arguments('-fvisibility=hidden', language : 'cpp')
++  add_project_arguments('-U__declspec_dllexport', language : 'cpp')
++  add_project_arguments('-D__declspec_dllexport=__attribute__((externally_visible))', language : 'cpp')
++endif
++
+ dxvk_compiler = meson.get_compiler('cpp')
+ if dxvk_compiler.get_id() == 'msvc'
+   dxvk_cpp_std='c++latest'
+@@ -36,6 +43,7 @@ if dxvk_winelib
+   lib_vulkan  = declare_dependency(link_args: [ '-lwinevulkan' ])
+   lib_d3d11   = declare_dependency(link_args: [ '-ld3d11' ])
+   lib_dxgi    = declare_dependency(link_args: [ '-ldxgi' ])
++  lib_d3d10core      = declare_dependency(link_args: [ '-ld3d10core' ])
+   lib_d3dcompiler_43 = declare_dependency(link_args: [ '-L'+dxvk_library_path, '-ld3dcompiler_43' ])
+   lib_d3dcompiler_47 = declare_dependency(link_args: [ '-ld3dcompiler' ])
+   dxvk_extradep += [ declare_dependency(link_args: [ '-ldl' ]) ]
+diff --git a/meson_options.txt b/meson_options.txt
+index 17d06be..8fc8241 100644
+--- a/meson_options.txt
++++ b/meson_options.txt
+@@ -1,1 +1,2 @@
+ option('enable_tests', type : 'boolean', value : false)
++option('whole_program', type : 'boolean', value : false)
+diff --git a/src/d3d10/d3d10.spec b/src/d3d10/d3d10.spec
+index efd145e..de62c17 100644
+--- a/src/d3d10/d3d10.spec
++++ b/src/d3d10/d3d10.spec
+@@ -4,10 +4,12 @@
+ @ stdcall D3D10GetVertexShaderProfile(ptr)
+ @ stdcall D3D10GetGeometryShaderProfile(ptr)
+ @ stdcall D3D10GetPixelShaderProfile(ptr)
++@ stdcall D3D10GetShaderDebugInfo(ptr long ptr) d3dcompiler_43.D3DGetDebugInfo
+ 
+-@ stdcall D3D10CreateBlob(long ptr)
+-@ stdcall D3D10GetInputSignatureBlob(ptr long ptr)
+-@ stdcall D3D10GetOutputSignatureBlob(ptr long ptr)
++@ stdcall D3D10CreateBlob(long ptr) d3dcompiler_43.D3DCreateBlob
++@ stdcall D3D10GetInputAndOutputSignatureBlob(ptr long ptr) d3dcompiler_43.D3DGetInputAndOutputSignatureBlob
++@ stdcall D3D10GetInputSignatureBlob(ptr long ptr) d3dcompiler_43.D3DGetInputSignatureBlob
++@ stdcall D3D10GetOutputSignatureBlob(ptr long ptr) d3dcompiler_43.D3DGetOutputSignatureBlob
+ 
+ @ stdcall D3D10ReflectShader(ptr long ptr)
+ @ stdcall D3D10CompileShader(ptr long str ptr ptr str str long ptr ptr)
+diff --git a/src/d3d10/d3d10_1.spec b/src/d3d10/d3d10_1.spec
+index bb183fd..5f890fe 100644
+--- a/src/d3d10/d3d10_1.spec
++++ b/src/d3d10/d3d10_1.spec
+@@ -1,21 +1,24 @@
+ @ stdcall D3D10CreateDevice1(ptr long ptr long long long ptr)
+ @ stdcall D3D10CreateDeviceAndSwapChain1(ptr long ptr long long long ptr ptr ptr)
+ 
+-@ stdcall D3D10GetVertexShaderProfile(ptr)
+-@ stdcall D3D10GetGeometryShaderProfile(ptr)
+-@ stdcall D3D10GetPixelShaderProfile(ptr)
++@ stdcall D3D10GetVertexShaderProfile(ptr) d3d10.D3D10GetVertexShaderProfile
++@ stdcall D3D10GetGeometryShaderProfile(ptr) d3d10.D3D10GetGeometryShaderProfile
++@ stdcall D3D10GetPixelShaderProfile(ptr) d3d10.D3D10GetPixelShaderProfile
++@ stdcall D3D10GetShaderDebugInfo(ptr long ptr) d3d10.D3D10GetShaderDebugInfo
+ 
+-@ stdcall D3D10CreateBlob(long ptr)
+-@ stdcall D3D10GetInputSignatureBlob(ptr long ptr)
+-@ stdcall D3D10GetOutputSignatureBlob(ptr long ptr)
++@ stdcall D3D10CreateBlob(long ptr) d3d10.D3D10CreateBlob
++@ stdcall D3D10GetInputSignatureBlob(ptr long ptr) d3d10.D3D10GetInputSignatureBlob
++@ stdcall D3D10GetOutputSignatureBlob(ptr long ptr) d3d10.D3D10GetOutputSignatureBlob
++@ stdcall D3D10GetInputAndOutputSignatureBlob(ptr long ptr) d3d10.D3D10GetInputAndOutputSignatureBlob
+ 
+-@ stdcall D3D10ReflectShader(ptr long ptr)
+-@ stdcall D3D10CompileShader(ptr long str ptr ptr str str long ptr ptr)
++@ stdcall D3D10ReflectShader(ptr long ptr) d3d10.D3D10ReflectShader
++@ stdcall D3D10CompileShader(ptr long str ptr ptr str str long ptr ptr) d3d10.D3D10CompileShader
+ 
+-@ stdcall D3D10CreateEffectFromMemory(ptr long long ptr ptr ptr)
+-@ stdcall D3D10CreateEffectPoolFromMemory(ptr long long ptr ptr)
+-@ stdcall D3D10CompileEffectFromMemory(ptr long ptr ptr ptr long long ptr ptr)
++
++@ stdcall D3D10CreateEffectFromMemory(ptr long long ptr ptr ptr) d3d10.D3D10CreateEffectFromMemory
++@ stdcall D3D10CreateEffectPoolFromMemory(ptr long long ptr ptr) d3d10.D3D10CreateEffectPoolFromMemory
++@ stdcall D3D10CompileEffectFromMemory(ptr long ptr ptr ptr long long ptr ptr) d3d10.D3D10CompileEffectFromMemory
+ 
+ @ stub D3D10DisassembleEffect
+-@ stdcall D3D10DisassembleShader(ptr long long ptr ptr)
++@ stdcall D3D10DisassembleShader(ptr long long ptr ptr) d3d10.D3D10DisassembleShader
+ @ stub D3D10PreprocessShader
+diff --git a/src/d3d10/d3d10_main.cpp b/src/d3d10/d3d10_main.cpp
+index 4d0dace..6685752 100644
+--- a/src/d3d10/d3d10_main.cpp
++++ b/src/d3d10/d3d10_main.cpp
+@@ -6,7 +6,15 @@
+ #include "../dxgi/dxgi_adapter.h"
+ #include "../dxgi/dxgi_device.h"
+ 
++#ifdef USE_D3D10CORE
++static dxvk::Logger logger("d3d10core.log");
++#endif
++#ifdef USE_D3D10
+ static dxvk::Logger logger("d3d10.log");
++#endif
++#ifdef USE_D3D10_1
++static dxvk::Logger logger("d3d10_1.log");
++#endif
+ 
+ extern "C" {
+   using namespace dxvk;
+@@ -19,7 +27,7 @@ extern "C" {
+           UINT                FeatureLevels,
+           ID3D11Device**      ppDevice);
+ 
+-
++#ifdef USE_D3D10CORE
+   DLLEXPORT HRESULT __stdcall D3D10CoreCreateDevice(
+           IDXGIFactory*           pFactory,
+           IDXGIAdapter*           pAdapter,
+@@ -49,9 +57,21 @@ extern "C" {
+     
+     return S_OK;
+   }
++#else
++  HRESULT __stdcall D3D10CoreCreateDevice(
++          IDXGIFactory*           pFactory,
++          IDXGIAdapter*           pAdapter,
++          UINT                    Flags,
++          D3D_FEATURE_LEVEL       FeatureLevel,
++          ID3D10Device**          ppDevice);
++#endif
+ 
+-
++#ifdef USE_D3D10_1
+   DLLEXPORT HRESULT __stdcall D3D10CreateDevice1(
++#else
++  HRESULT __stdcall D3D10CreateDevice1(
++#endif
++
+           IDXGIAdapter*           pAdapter,
+           D3D10_DRIVER_TYPE       DriverType,
+           HMODULE                 Software,
+@@ -111,8 +131,11 @@ extern "C" {
+     return hr;
+   }
+ 
+-
++#ifdef USE_D3D10
+   DLLEXPORT HRESULT __stdcall D3D10CreateDevice(
++#else
++  HRESULT __stdcall D3D10CreateDevice(
++#endif
+           IDXGIAdapter*           pAdapter,
+           D3D10_DRIVER_TYPE       DriverType,
+           HMODULE                 Software,
+@@ -136,8 +159,11 @@ extern "C" {
+     } return S_FALSE;
+   }
+ 
+-
++#ifdef USE_D3D10_1
+   DLLEXPORT HRESULT __stdcall D3D10CreateDeviceAndSwapChain1(
++#else
++  HRESULT __stdcall D3D10CreateDeviceAndSwapChain1(
++#endif
+           IDXGIAdapter*           pAdapter,
+           D3D10_DRIVER_TYPE       DriverType,
+           HMODULE                 Software,
+@@ -194,8 +220,11 @@ extern "C" {
+     } return S_FALSE;
+   }
+ 
+-
++#ifdef USE_D3D10
+   DLLEXPORT HRESULT __stdcall D3D10CreateDeviceAndSwapChain(
++#else
++  HRESULT __stdcall D3D10CreateDeviceAndSwapChain(
++#endif
+           IDXGIAdapter*           pAdapter,
+           D3D10_DRIVER_TYPE       DriverType,
+           HMODULE                 Software,
+@@ -220,19 +249,18 @@ extern "C" {
+       return S_OK;
+     } return S_FALSE;
+   }
++#ifdef USE_D3D10
++  DLLEXPORT const char* STDMETHODCALLTYPE D3D10GetVertexShaderProfile   (ID3D10Device*) { return "vs_4_1"; }
++  DLLEXPORT const char* STDMETHODCALLTYPE D3D10GetGeometryShaderProfile (ID3D10Device*) { return "gs_4_1"; }
++  DLLEXPORT const char* STDMETHODCALLTYPE D3D10GetPixelShaderProfile    (ID3D10Device*) { return "ps_4_1"; }
+ 
+ 
+-  const char* STDMETHODCALLTYPE D3D10GetVertexShaderProfile   (ID3D10Device*) { return "vs_4_1"; }
+-  const char* STDMETHODCALLTYPE D3D10GetGeometryShaderProfile (ID3D10Device*) { return "gs_4_1"; }
+-  const char* STDMETHODCALLTYPE D3D10GetPixelShaderProfile    (ID3D10Device*) { return "ps_4_1"; }
+-
+-
+-  HRESULT STDMETHODCALLTYPE D3D10CreateBlob(SIZE_T size, LPD3D10BLOB* ppBuffer) {
++  DLLEXPORT HRESULT STDMETHODCALLTYPE D3D10CreateBlob(SIZE_T size, LPD3D10BLOB* ppBuffer) {
+     return D3DCreateBlob(size, ppBuffer);
+   }
+ 
+ 
+-  HRESULT STDMETHODCALLTYPE D3D10GetInputSignatureBlob(
++  DLLEXPORT HRESULT STDMETHODCALLTYPE D3D10GetInputSignatureBlob(
+     const void*                     pShaderBytecode,
+           SIZE_T                    BytecodeLength,
+           ID3D10Blob**              ppSignatureBlob) {
+@@ -243,7 +271,7 @@ extern "C" {
+   }
+ 
+ 
+-  HRESULT STDMETHODCALLTYPE D3D10GetOutputSignatureBlob(
++  DLLEXPORT HRESULT STDMETHODCALLTYPE D3D10GetOutputSignatureBlob(
+     const void*                     pShaderBytecode,
+           SIZE_T                    BytecodeLength,
+           ID3D10Blob**              ppSignatureBlob) {
+@@ -254,7 +282,7 @@ extern "C" {
+   }
+ 
+ 
+-  HRESULT STDMETHODCALLTYPE D3D10ReflectShader(
++  DLLEXPORT HRESULT STDMETHODCALLTYPE D3D10ReflectShader(
+     const void*                     pShaderBytecode,
+           SIZE_T                    BytecodeLength,
+           ID3D10ShaderReflection**  ppReflector) {
+@@ -279,7 +307,7 @@ extern "C" {
+   }
+ 
+ 
+-  HRESULT STDMETHODCALLTYPE D3D10CompileShader(
++  DLLEXPORT HRESULT STDMETHODCALLTYPE D3D10CompileShader(
+           LPCSTR              pSrcData,
+           SIZE_T              SrcDataSize,
+           LPCSTR              pFileName,
+@@ -296,7 +324,7 @@ extern "C" {
+   }
+ 
+ 
+-  HRESULT STDMETHODCALLTYPE D3D10CreateEffectFromMemory(
++  DLLEXPORT HRESULT STDMETHODCALLTYPE D3D10CreateEffectFromMemory(
+           void*               pData,
+           SIZE_T              DataSize,
+           UINT                EffectFlags,
+@@ -308,7 +336,7 @@ extern "C" {
+   }
+ 
+ 
+-  HRESULT STDMETHODCALLTYPE D3D10CreateEffectPoolFromMemory(
++  DLLEXPORT HRESULT STDMETHODCALLTYPE D3D10CreateEffectPoolFromMemory(
+           void*               pData,
+           SIZE_T              DataSize,
+           UINT                EffectFlags,
+@@ -319,7 +347,7 @@ extern "C" {
+   }
+ 
+ 
+-  HRESULT STDMETHODCALLTYPE D3D10CompileEffectFromMemory(
++  DLLEXPORT HRESULT STDMETHODCALLTYPE D3D10CompileEffectFromMemory(
+           void*               pData,
+           SIZE_T              DataLength,
+           LPCSTR              pSrcFileName,
+@@ -334,7 +362,7 @@ extern "C" {
+   }
+ 
+ 
+-  HRESULT STDMETHODCALLTYPE D3D10DisassembleEffect(
++  DLLEXPORT HRESULT STDMETHODCALLTYPE D3D10DisassembleEffect(
+           ID3D10Effect*       pEffect,
+           BOOL                EnableColorCode,
+           ID3D10Blob**        ppDisassembly) {
+@@ -343,7 +371,7 @@ extern "C" {
+   }
+ 
+ 
+-  HRESULT STDMETHODCALLTYPE D3D10DisassembleShader(
++  DLLEXPORT HRESULT STDMETHODCALLTYPE D3D10DisassembleShader(
+     const void*               pShader,
+           SIZE_T              BytecodeLength,
+           BOOL                EnableColorCode,
+@@ -355,7 +383,7 @@ extern "C" {
+   }
+ 
+ 
+-  HRESULT STDMETHODCALLTYPE D3D10PreprocessShader(
++  DLLEXPORT HRESULT STDMETHODCALLTYPE D3D10PreprocessShader(
+           LPCSTR              pSrcData,
+           SIZE_T              SrcDataSize,
+           LPCSTR              pFileName,
+@@ -370,7 +398,7 @@ extern "C" {
+       ppShaderText,
+       ppErrorMsgs);
+   }
+-
++#endif
+ }
+ 
+ 
+diff --git a/src/d3d10/meson.build b/src/d3d10/meson.build
+index 899de19..eb555e6 100644
+--- a/src/d3d10/meson.build
++++ b/src/d3d10/meson.build
+@@ -6,31 +6,50 @@ d3d10_main_src = [
+ d3d10_deps = [ lib_d3dcompiler_43, lib_dxgi ]
+ d3d10_deps += dxvk_winelib ? lib_d3d11 : d3d11_dep
+ 
++d3d10core_args  = ['-DUSE_D3D10CORE']
++d3d10_args      = ['-DUSE_D3D10']
++d3d10_1_args    = ['-DUSE_D3D10_1']
++
++if get_option('whole_program')
++  d3d10_main_src = [
++    util_src,
++    vkcommon_src,
++    spirv_src,
++    dxvk_src, glsl_generator.process(dxvk_shaders), dxvk_version,
++    dxbc_src,
++    d3d10_main_src
++  ]
++  d3d10_whole_inc = [dxvk_include_path, dxvk_inc, vulkan_inc]
++endif
++
+ d3d10_core_dll = shared_library('d3d10core'+dll_ext, d3d10_main_src,
+   name_prefix         : '',
+-  dependencies        : [ d3d10_deps, dxbc_dep, dxvk_dep ],
+-  include_directories : dxvk_include_path,
++  dependencies        : not get_option('whole_program') ? [ d3d10_deps, dxbc_dep, dxvk_dep ] : [ lib_dxgi, lib_d3d11 ] + dxvk_extradep,
++  include_directories : not get_option('whole_program') ? dxvk_include_path : d3d10_whole_inc,
+   install             : true,
+   objects             : not dxvk_msvc ? 'd3d10core'+def_spec_ext : [],
+   vs_module_defs      : 'd3d10core'+def_spec_ext,
++  cpp_args            : [ d3d10core_args ],
+   override_options    : ['cpp_std='+dxvk_cpp_std])
+ 
+ d3d10_dll = shared_library('d3d10'+dll_ext, d3d10_main_src,
+   name_prefix         : '',
+-  dependencies        : [ d3d10_deps, dxbc_dep, dxvk_dep ],
+-  include_directories : dxvk_include_path,
++  dependencies        : not get_option('whole_program') ? [ d3d10_deps, dxbc_dep, dxvk_dep, lib_d3d10core ] : [  lib_dxgi, lib_d3d10core, lib_d3dcompiler_43 ] + dxvk_extradep,
++  include_directories : not get_option('whole_program') ? dxvk_include_path : d3d10_whole_inc,
+   install             : true,
+   objects             : not dxvk_msvc ? 'd3d10'+def_spec_ext : [],
+   vs_module_defs      : 'd3d10'+def_spec_ext,
++  cpp_args            : [ d3d10_args ],
+   override_options    : ['cpp_std='+dxvk_cpp_std])
+ 
+ d3d10_1_dll = shared_library('d3d10_1'+dll_ext, d3d10_main_src,
+   name_prefix         : '',
+-  dependencies        : [ d3d10_deps, dxbc_dep, dxvk_dep ],
+-  include_directories : dxvk_include_path,
++  dependencies        : not get_option('whole_program') ? [ d3d10_deps, dxbc_dep, dxvk_dep, lib_d3d10core ] : [ lib_dxgi, lib_d3d10core ] + dxvk_extradep,
++  include_directories : not get_option('whole_program') ? dxvk_include_path : d3d10_whole_inc,
+   install             : true,
+   objects             : not dxvk_msvc ? 'd3d10_1'+def_spec_ext : [],
+   vs_module_defs      : 'd3d10_1'+def_spec_ext,
++  cpp_args            : [ d3d10_1_args ],
+   override_options    : ['cpp_std='+dxvk_cpp_std])
+ 
+ d3d10_dep = declare_dependency(
+diff --git a/src/d3d11/meson.build b/src/d3d11/meson.build
+index 3e68703..8975e90 100644
+--- a/src/d3d11/meson.build
++++ b/src/d3d11/meson.build
+@@ -53,10 +53,22 @@ d3d11_src = [
+   'd3d11_view_uav.cpp',
+ ]
+ 
++if get_option('whole_program')
++  d3d11_src = [
++    util_src,
++    vkcommon_src,
++    spirv_src,
++    dxvk_src, glsl_generator.process(dxvk_shaders), dxvk_version,
++    dxbc_src,
++    d3d11_src
++  ]
++  d3d11_whole_inc = [dxvk_include_path, dxvk_inc, vulkan_inc]
++endif
++
+ d3d11_dll = shared_library('d3d11'+dll_ext, dxgi_common_src + d3d11_src + d3d10_src, glsl_generator.process(dxgi_shaders),
+   name_prefix         : '',
+-  dependencies        : [ lib_dxgi, dxbc_dep, dxvk_dep ],
+-  include_directories : dxvk_include_path,
++  dependencies        : not get_option('whole_program') ? [ lib_dxgi, dxbc_dep, dxvk_dep ] : [ thread_dep, lib_vulkan, lib_dxgi ] + dxvk_extradep,
++  include_directories : not get_option('whole_program') ? dxvk_include_path : d3d11_whole_inc,
+   install             : true,
+   objects             : not dxvk_msvc ? 'd3d11'+def_spec_ext : [],
+   vs_module_defs      : 'd3d11'+def_spec_ext,
+diff --git a/src/dxbc/meson.build b/src/dxbc/meson.build
+index 3aa5c70..4dd724e 100644
+--- a/src/dxbc/meson.build
++++ b/src/dxbc/meson.build
+@@ -16,6 +16,7 @@ dxbc_src = files([
+ 
+ dxbc_lib = static_library('dxbc', dxbc_src,
+   include_directories : [ dxvk_include_path ],
++  build_by_default: not get_option('whole_program'),
+   override_options    : ['cpp_std='+dxvk_cpp_std])
+ 
+ dxbc_dep = declare_dependency(
+diff --git a/src/dxgi/dxgi_include.h b/src/dxgi/dxgi_include.h
+index 9211261..f4ba27f 100644
+--- a/src/dxgi/dxgi_include.h
++++ b/src/dxgi/dxgi_include.h
+@@ -2,7 +2,7 @@
+ 
+ //for some reason we need to specify __declspec(dllexport) for MinGW
+ #if defined(_MSC_VER) || defined(__WINE__)
+-  #define DLLEXPORT
++  #define DLLEXPORT __attribute__((externally_visible))
+ #else
+   #define DLLEXPORT __declspec(dllexport)
+ #endif
+diff --git a/src/dxgi/meson.build b/src/dxgi/meson.build
+index 8d18335..eb29abd 100644
+--- a/src/dxgi/meson.build
++++ b/src/dxgi/meson.build
+@@ -3,7 +3,7 @@ dxgi_shaders = files([
+   'shaders/dxgi_presenter_vert.vert',
+ ])
+ 
+-dxgi_src = [
++dxgi_src = files([
+   'dxgi_adapter.cpp',
+   'dxgi_device.cpp',
+   'dxgi_enums.cpp',
+@@ -13,12 +13,23 @@ dxgi_src = [
+   'dxgi_options.cpp',
+   'dxgi_output.cpp',
+   'dxgi_swapchain.cpp',
+-]
++])
++
++if get_option('whole_program')
++  dxgi_src = [
++    util_src,
++    vkcommon_src,
++    spirv_src,
++    dxvk_src, glsl_generator.process(dxvk_shaders), dxvk_version,
++    dxgi_src, glsl_generator.process(dxgi_shaders),
++  ]
++  dxgi_whole_inc = [dxvk_include_path, dxvk_inc, vulkan_inc]
++endif
+ 
+ dxgi_dll = shared_library('dxgi'+dll_ext, dxgi_src,
+   name_prefix         : '',
+-  dependencies        : [ dxvk_dep ],
+-  include_directories : dxvk_include_path,
++  dependencies        : not get_option('whole_program') ? [ dxvk_dep ] : [ thread_dep, lib_vulkan ] + dxvk_extradep,
++  include_directories : not get_option('whole_program') ? dxvk_include_path : dxgi_whole_inc,
+   install             : true,
+   vs_module_defs      : 'dxgi'+def_spec_ext,
+   objects             : not dxvk_msvc ? 'dxgi'+def_spec_ext : [],
+diff --git a/src/dxvk/meson.build b/src/dxvk/meson.build
+index ca8e4e3..6113eab 100644
+--- a/src/dxvk/meson.build
++++ b/src/dxvk/meson.build
+@@ -98,11 +98,14 @@ dxvk_src = files([
+   'hud/dxvk_hud_stats.cpp',
+ ])
+ 
++dxvk_inc = include_directories('.')
++
+ thread_dep = dependency('threads')
+ 
+ dxvk_lib = static_library('dxvk', dxvk_src, glsl_generator.process(dxvk_shaders), dxvk_version,
+   link_with           : [ util_lib, spirv_lib ],
+   dependencies        : [ thread_dep, vkcommon_dep ] + dxvk_extradep,
++  build_by_default: not get_option('whole_program'),
+   include_directories : [ dxvk_include_path ],
+   override_options    : ['cpp_std='+dxvk_cpp_std])
+ 
+diff --git a/src/spirv/meson.build b/src/spirv/meson.build
+index 70e6ae7..c2a050f 100644
+--- a/src/spirv/meson.build
++++ b/src/spirv/meson.build
+@@ -5,4 +5,5 @@ spirv_src = files([
+ 
+ spirv_lib = static_library('spirv', spirv_src,
+   include_directories : [ dxvk_include_path ],
++  build_by_default: not get_option('whole_program'),
+   override_options    : ['cpp_std='+dxvk_cpp_std])
+diff --git a/src/util/meson.build b/src/util/meson.build
+index 50583f2..e2f6c88 100644
+--- a/src/util/meson.build
++++ b/src/util/meson.build
+@@ -10,12 +10,13 @@ util_src = files([
+   'log/log.cpp',
+   'log/log_debug.cpp',
+   
+-  'sha1/sha1.c',
++  'sha1/sha1.cpp',
+   'sha1/sha1_util.cpp',
+ ])
+ 
+ util_lib = static_library('util', util_src,
+   include_directories : [ dxvk_include_path ],
++  build_by_default: not get_option('whole_program'),
+   override_options    : ['cpp_std='+dxvk_cpp_std])
+ 
+ util_dep = declare_dependency(
+diff --git a/src/util/sha1/sha1.c b/src/util/sha1/sha1.cpp
+similarity index 100%
+rename from src/util/sha1/sha1.c
+rename to src/util/sha1/sha1.cpp
+diff --git a/src/vulkan/meson.build b/src/vulkan/meson.build
+index 8263552..2ca9337 100644
+--- a/src/vulkan/meson.build
++++ b/src/vulkan/meson.build
+@@ -6,8 +6,11 @@ vkcommon_src = files([
+ 
+ thread_dep = dependency('threads')
+ 
++vulkan_inc = include_directories('.')
++
+ vkcommon_lib = static_library('vkcommon', vkcommon_src,
+   dependencies        : [ thread_dep, lib_vulkan ],
++  build_by_default: not get_option('whole_program'),
+   override_options    : ['cpp_std='+dxvk_cpp_std],
+   include_directories : [ dxvk_include_path ])
+ 
+-- 
+2.19.2
+
