@@ -1,0 +1,2 @@
+move games-util/dxvk app-emulation/dxvk
+move games-util/d9vk app-emulation/d9vk
