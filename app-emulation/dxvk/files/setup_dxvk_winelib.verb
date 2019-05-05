@@ -1,0 +1,53 @@
+w_metadata setup_dxvk_winelib dlls \
+    title="DXVK" \
+    publisher="Philip Rebohle" \
+    year="2018" \
+    media="manual_download" \
+    file1="dxgi.dll" \
+    file2="d3d11.dll" \
+    file3="d3d10.dll" \
+    file4="d3d10_1.dll" \
+    file5="d3d10core.dll" \
+    installed_file1="$W_SYSTEM32_DLLS_WIN/dxgi.dll" \
+    installed_file2="$W_SYSTEM32_DLLS_WIN/d3d11.dll" \
+    installed_file3="$W_SYSTEM32_DLLS_WIN/d3d10.dll" \
+    installed_file4="$W_SYSTEM32_DLLS_WIN/d3d10_1.dll" \
+    installed_file5="$W_SYSTEM32_DLLS_WIN/d3d10core.dll" \
+    homepage="https://github.com/doitsujin/dxvk"
+
+DXVK_ROOT_DIR_32=@dll_dir_x86@
+DXVK_ROOT_DIR_64=@dll_dir_amd64@
+IS_GIT_VERSION=@is_git_ver@
+
+[ -z "${IS_GIT_VERSION}" ] && INSTALL_CMD="cp --remove-destination" || INSTALL_CMD="ln -sf"
+
+load_setup_dxvk_winelib()
+{
+    die() {
+        (>&2 echo "No DXVK dlls installed $1.")
+        exit 1
+    }
+
+    [ ! -z "${DXVK_ROOT_DIR_32}" ] || die "for win32 arch"
+    [   -e "${DXVK_ROOT_DIR_32}" ] || die "in ${DXVK_ROOT_DIR_32}"
+
+    for f in $file{1..5}; do
+        w_try $INSTALL_CMD "${DXVK_ROOT_DIR_32}/${f/dll/dll.so}" "${W_SYSTEM32_DLLS}/${f}"
+    done
+
+    if [ "${W_ARCH}" == "win64" ]; then
+        [ ! -z "${DXVK_ROOT_DIR_64}" ] || die "for win64 arch"
+        [   -e "${DXVK_ROOT_DIR_64}" ] || die "in ${DXVK_ROOT_DIR_64}"
+
+        for f in $file{1..5}; do
+            w_try $INSTALL_CMD "${DXVK_ROOT_DIR_64}/${f/dll/dll.so}" "${W_SYSTEM64_DLLS}/${f}"
+        done
+    fi
+
+    w_override_dlls native \
+        dxgi \
+        d3d11 \
+        d3d10 \
+        d3d10_1 \
+        d3d10core
+}
