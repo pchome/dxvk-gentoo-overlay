@@ -22,7 +22,7 @@ fi
 
 LICENSE="ZLIB"
 SLOT="${PV}"
-IUSE="openvr utils"
+IUSE="utils"
 
 RESTRICT="test"
 
@@ -36,10 +36,6 @@ RDEPEND="
 	utils? ( app-emulation/winetricks )"
 DEPEND="${RDEPEND}
 	dev-util/glslang"
-
-PATCHES=(
-	"${FILESDIR}/dxvk-1.1.1-optional-openvr.patch"
-)
 
 bits() { [[ ${ABI} = amd64 ]] && echo 64 || echo 32; }
 
@@ -87,7 +83,6 @@ multilib_src_configure() {
 		--libdir="$(get_libdir)/dxvk-${PV}"
 		--bindir="$(get_libdir)/dxvk-${PV}/bin"
 		-Denable_tests=false
-		$(meson_use openvr enable_openvr)
 		--unity=on
 	)
 	meson_src_configure
