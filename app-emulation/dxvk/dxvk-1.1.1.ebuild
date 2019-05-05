@@ -95,5 +95,7 @@ multilib_src_install_all() {
 	exeinto /usr/bin
 	doexe "${S}/dxvk-setup-${PV}"
 
+	dodoc "${S}/dxvk.conf"
+
 	einstalldocs
 }
