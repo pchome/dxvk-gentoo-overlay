@@ -22,7 +22,6 @@ fi
 
 LICENSE="ZLIB"
 SLOT="${PV}"
-IUSE="utils"
 
 RESTRICT="test"
 
@@ -32,8 +31,7 @@ RDEPEND="
 		>=app-emulation/wine-staging-3.14:*[${MULTILIB_USEDEP},vulkan]
 		>=app-emulation/wine-d3d9-3.14:*[${MULTILIB_USEDEP},vulkan]
 		>=app-emulation/wine-any-3.14:*[${MULTILIB_USEDEP},vulkan]
-	)
-	utils? ( app-emulation/winetricks )"
+	)"
 DEPEND="${RDEPEND}
 	dev-util/glslang"
 
@@ -60,11 +58,13 @@ pkg_setup() {
 }
 
 src_prepare() {
-	if use utils; then
-	    cp "${FILESDIR}/setup.sh" "${T}/d9vk-setup-${PV}"
-		cp "${FILESDIR}/setup_d9vk_winelib.verb" "${T}"
-		sed -e "s/@verb_location@/${EPREFIX}\/usr\/share\/d9vk-${PV}/" -i "${T}/d9vk-setup-${PV}" || die
-	fi
+	# Create versioned setup script
+	cp "setup_dxvk.sh" "d9vk-setup-${PV}"
+	sed \
+		-e "s#basedir=.*#basedir=\"${EPREFIX}/usr\"#" \
+		-e "s#\$action d3d10.*##" \
+		-e "s#\$action d3d11#\$action d3d9#" \
+		-i "d9vk-setup-${PV}" || die
 
 	default
 
@@ -82,6 +82,9 @@ src_prepare() {
 }
 
 multilib_src_configure() {
+	# Set DXVK location for each ABI
+	sed -e "s#x$(bits)#$(get_libdir)/d9vk-${PV}#" -i "${S}/d9vk-setup-${PV}" || die
+
 	local emesonargs=(
 		--cross-file="${S}/build-wine$(bits).txt"
 		--libdir="$(get_libdir)/d9vk-${PV}"
@@ -90,10 +93,6 @@ multilib_src_configure() {
 		--unity=on
 	)
 	meson_src_configure
-
-	if use utils; then
-		sed -e "s/@dll_dir_${ABI}@/${EPREFIX}\/usr\/$(get_libdir)\/d9vk-${PV}/" -i "${T}/setup_d9vk_winelib.verb" || die
-	fi
 }
 
 multilib_src_install() {
@@ -101,22 +100,9 @@ multilib_src_install() {
 }
 
 multilib_src_install_all() {
-    if use utils; then
-		if [[ ${PV} == "9999" ]]; then
-			sed -e "s/@is_git_ver@/1/" -i "${T}/setup_d9vk_winelib.verb" || die
-		fi
-
-		# clean undefined
-		sed -e "s/@.*@//" -i "${T}/setup_d9vk_winelib.verb" || die
-
-	    # install winetricks verb
-	    insinto "/usr/share/d9vk-${PV}"
-	    doins "${T}/setup_d9vk_winelib.verb"
-
-	    # create combined setup helper
-	    exeinto /usr/bin
-	    doexe "${T}/d9vk-setup-${PV}"
-	fi
+	# create combined setup helper
+	exeinto /usr/bin
+	doexe "${S}/d9vk-setup-${PV}"
 
 	einstalldocs
 }
