@@ -16,7 +16,7 @@ if [[ ${PV} == "9999" ]] ; then
 	inherit git-r3
 	SRC_URI=""
 else
-	SRC_URI="https://github.com/Joshua-Ashton/d9vk/archive/v${PV}.tar.gz -> ${P}.tar.gz"
+	SRC_URI="https://github.com/Joshua-Ashton/d9vk/archive/${PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="-* ~amd64"
 fi
 
@@ -62,29 +62,32 @@ src_prepare() {
 	cp "setup_dxvk.sh" "d9vk-setup-${PV}"
 	sed \
 		-e "s#basedir=.*#basedir=\"${EPREFIX}/usr\"#" \
-		-e "s#\$action d3d10.*##" \
-		-e "s#\$action d3d11#\$action d3d9#" \
+		-e "s#with_dxgi=1#with_dxgi=0#" \
+		-e "s#\$action d3d1.*##" \
 		-i "d9vk-setup-${PV}" || die
 
 	default
 
 	bootstrap_d9vk() {
-		local file=build-wine$(bits).txt
+		# Set D9VK location for current ABI in setup script
+		sed -e "s#x$(bits)#$(get_libdir)/d9vk-${PV}#" -i "d9vk-setup-${PV}" || die
 
+		# Add *FLAGS to cross-file
 		sed -E \
 			-e "s#^(c_args.*)#\1 + $(_meson_env_array "${CFLAGS}")#" \
 			-e "s#^(cpp_args.*)#\1 + $(_meson_env_array "${CXXFLAGS}")#" \
 			-e "s#^(cpp_link_args.*)#\1 + $(_meson_env_array "${LDFLAGS}")#" \
-			-i ${file} || die
+			-i build-wine$(bits).txt || die
 	}
 
 	multilib_foreach_abi bootstrap_d9vk
+
+	# Clean missed ABI in setup script
+	sed -e "s#.*x32.*##" -e "s#.*x64.*##" \
+		-i "d9vk-setup-${PV}" || die
 }
 
 multilib_src_configure() {
-	# Set DXVK location for each ABI
-	sed -e "s#x$(bits)#$(get_libdir)/d9vk-${PV}#" -i "${S}/d9vk-setup-${PV}" || die
-
 	local emesonargs=(
 		--cross-file="${S}/build-wine$(bits).txt"
 		--libdir="$(get_libdir)/d9vk-${PV}"
@@ -103,6 +106,8 @@ multilib_src_install_all() {
 	# create combined setup helper
 	exeinto /usr/bin
 	doexe "${S}/d9vk-setup-${PV}"
+
+	dodoc "${S}/dxvk.conf"
 
 	einstalldocs
 }
