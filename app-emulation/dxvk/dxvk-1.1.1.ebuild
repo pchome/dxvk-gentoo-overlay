@@ -60,22 +60,25 @@ src_prepare() {
 	sed -e "s#basedir=.*#basedir=\"${EPREFIX}/usr\"#" -i "dxvk-setup-${PV}" || die
 
 	bootstrap_dxvk() {
-		local file=build-wine$(bits).txt
+		# Set DXVK location for each ABI
+		sed -e "s#x$(bits)#$(get_libdir)/dxvk-${PV}#" -i "${S}/dxvk-setup-${PV}" || die
 
+		# Add *FLAGS to cross-file
 		sed -E \
 			-e "s#^(c_args.*)#\1 + $(_meson_env_array "${CFLAGS}")#" \
 			-e "s#^(cpp_args.*)#\1 + $(_meson_env_array "${CXXFLAGS}")#" \
 			-e "s#^(cpp_link_args.*)#\1 + $(_meson_env_array "${LDFLAGS}")#" \
-			-i ${file} || die
+			-i build-wine$(bits).txt || die
 	}
 
 	multilib_foreach_abi bootstrap_dxvk
+
+	# Clean missed ABI in setup script
+	sed -e "s#.*x32.*##" -e "s#.*x64.*##" \
+		-i "dxvk-setup-${PV}" || die
 }
 
 multilib_src_configure() {
-	# Set DXVK location for each ABI
-        sed -e "s#x$(bits)#$(get_libdir)/dxvk-${PV}#" -i "${S}/dxvk-setup-${PV}" || die
-	
 	local emesonargs=(
 		--cross-file="${S}/build-wine$(bits).txt"
 		--libdir="$(get_libdir)/dxvk-${PV}"
