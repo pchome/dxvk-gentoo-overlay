@@ -35,10 +35,6 @@ RDEPEND="
 DEPEND="${RDEPEND}
 	dev-util/glslang"
 
-PATCHES=(
-	"${FILESDIR}/d9vk-d3d9-only.patch"
-)
-
 bits() { [[ ${ABI} = amd64 ]] && echo 64 || echo 32; }
 
 dxvk_check_requirements() {
@@ -93,6 +89,9 @@ multilib_src_configure() {
 		--libdir="$(get_libdir)/d9vk-${PV}"
 		--bindir="$(get_libdir)/d9vk-${PV}/bin"
 		-Denable_tests=false
+		-Denable_dxgi=false
+		-Denable_d3d10=false
+		-Denable_d3d11=false
 		--unity=on
 	)
 	meson_src_configure
