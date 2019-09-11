@@ -1,5 +1,8 @@
 # dxvk-gentoo-overlay
 Experimental ebuild repository for [DXVK](https://github.com/doitsujin/dxvk) winelib builds
+
+**NOTE**: This overlay rather stalled. See http://gpo.zugaina.org/app-emulation/dxvk for alternatives.
+
 ```ini
 # Add to e.g. /etc/portage/repos.conf/external.conf
 [dxvk]
